@@ -9,35 +9,26 @@ Building a comprehensive web platform for learning Quranic Arabic with user acco
 
 ## Phase 1: Foundation & Setup
 
-### 1.1 Project Structure Setup
-- [ ] Create project folder structure
-- [ ] Set up basic HTML/CSS/JavaScript framework
-- [ ] Choose and configure database (MongoDB/Firebase/PostgreSQL)
-- [ ] Set up authentication system (Google OAuth integration)
-- [ ] Create basic responsive CSS framework/styles
-- [ ] Set up version control and deployment pipeline
+### 1.1 Database Setup
+- [ ] Set up Supabase database via MCP
+- [ ] Design basic database tables as needed
 
-### 1.2 Database Schema Design
-- [ ] Design User schema (profile, progress tracking)
-- [ ] Design Course schema (course details, lesson relationships)
-- [ ] Design Lesson schema (content, vocabulary, quizzes)
-- [ ] Design Progress schema (completed lessons, scores)
-- [ ] Design Admin schema (content management permissions)
+**Note**: Starting directly with homepage development. Authentication and complex setup will be added later.
 
 ---
 
 ## Phase 2: Core Pages Development
 
-### 2.1 Homepage (home.html)
-- [ ] Create landing page layout
-- [ ] Add hero section with site introduction
-- [ ] Implement navigation header with logo
+### 2.1 Homepage (home.html) **[CURRENT FOCUS]**
+- [ ] Create sleek, minimalist landing page layout
+- [ ] Add clean hero section with site introduction
+- [ ] Implement minimalist navigation header
 - [ ] Add "Courses" link/button
-- [ ] Add "Sign Up/Login" link/button
-- [ ] Create responsive footer
-- [ ] Add basic styling and responsive design
-- [ ] Test all navigation links
-- [ ] Optimize for mobile devices
+- [ ] Add "Sign Up/Login" link/button (placeholder for now)
+- [ ] Create simple, elegant footer
+- [ ] Add minimalist styling and responsive design
+- [ ] Test navigation and responsiveness
+- [ ] **WAIT FOR USER APPROVAL BEFORE PROCEEDING**
 
 ### 2.2 Authentication Pages
 - [ ] Create login page (login.html)
@@ -233,19 +224,13 @@ Building a comprehensive web platform for learning Quranic Arabic with user acco
 
 ## Technical Stack Recommendations
 
+### Database
+- **Supabase** (PostgreSQL with real-time features, authentication, and storage)
+
 ### Frontend
 - HTML5, CSS3, JavaScript (ES6+)
-- Responsive framework (Bootstrap/Tailwind CSS)
-- Optional: React/Vue.js for complex interactions
-
-### Backend
-- Node.js with Express.js OR Python with Django/Flask
-- RESTful API design
-- JWT for authentication
-
-### Database
-- MongoDB (flexible schema) OR PostgreSQL (structured data)
-- Redis for session management and caching
+- Minimalist design approach
+- Mobile-first responsive design
 
 ### Authentication
 - Google OAuth 2.0
@@ -263,13 +248,15 @@ Building a comprehensive web platform for learning Quranic Arabic with user acco
 
 ## Notes for Development
 
+**⚠️ IMPORTANT: APPROVAL REQUIRED**
+After completing each task, **WAIT FOR USER APPROVAL** before proceeding to the next task.
+
 1. **Progressive Development**: Each page should be fully functional before moving to the next
 2. **Testing**: Test each feature thoroughly before proceeding
-3. **Responsive Design**: Ensure mobile-first approach throughout
+3. **Minimalist Design**: Focus on clean, sleek, simple interfaces
 4. **User Experience**: Focus on intuitive navigation and clear feedback
 5. **Performance**: Optimize for fast loading, especially on mobile devices
-6. **Security**: Implement proper authentication and data protection
-7. **Scalability**: Design database and backend to handle growth
+6. **Responsive Design**: Ensure mobile-first approach throughout
 
 ---
 
