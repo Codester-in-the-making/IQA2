@@ -1987,3 +1987,908 @@ body {
         text-align: center;
     }
 }
+
+/* ========================================
+   Lesson Page Core Structure
+   ======================================== */
+
+.lesson-main {
+    min-height: 100vh;
+    background: var(--background-primary);
+    padding-top: 80px; /* Account for navbar */
+}
+
+.lesson-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+}
+
+/* Lesson Header */
+.lesson-header {
+    margin-bottom: 3rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(200, 168, 130, 0.2);
+}
+
+.lesson-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(200, 168, 130, 0.2);
+}
+
+.lesson-title-section {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.lesson-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.lesson-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(200, 168, 130, 0.1);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.course-title {
+    color: var(--primary-gold);
+    font-weight: 600;
+}
+
+.lesson-type {
+    color: var(--primary-brown);
+    background: rgba(186, 147, 109, 0.2) !important;
+}
+
+.lesson-duration {
+    color: var(--text-secondary);
+}
+
+.lesson-title {
+    font-family: 'Crimson Text', serif;
+    font-size: 2.5rem;
+    color: var(--primary-brown);
+    margin: 1rem 0;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.lesson-actions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(200, 168, 130, 0.2);
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(200, 168, 130, 0.1);
+    border: 1px solid rgba(200, 168, 130, 0.3);
+    border-radius: 8px;
+    color: var(--primary-brown);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.action-btn:hover {
+    background: rgba(200, 168, 130, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-progress-indicator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: fixed;
+    top: 100px; /* Account for navbar height */
+    right: 30px; /* More margin from edge */
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 1rem;
+    border-radius: 50px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(200, 168, 130, 0.2);
+    transition: all 0.3s ease;
+}
+
+.lesson-progress-indicator:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.progress-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: conic-gradient(var(--primary-gold) var(--progress, 0%), rgba(200, 168, 130, 0.2) 0%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.progress-circle::before {
+    content: '';
+    position: absolute;
+    width: 46px;
+    height: 46px;
+    background: white;
+    border-radius: 50%;
+}
+
+.progress-percent {
+    position: relative;
+    z-index: 1;
+    font-weight: 600;
+    color: var(--primary-brown);
+    font-size: 0.9rem;
+}
+
+/* Lesson Content Area */
+.lesson-content-area {
+    position: relative;
+}
+
+.lesson-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    margin: 2rem 0;
+}
+
+.loading-spinner {
+    font-size: 2rem;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+    color: var(--primary-gold);
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.lesson-materials {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(200, 168, 130, 0.2);
+}
+
+/* Material Items */
+.material-item {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-gold);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.material-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.material-title {
+    font-family: 'Crimson Text', serif;
+    font-size: 1.6rem;
+    color: var(--primary-brown);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.material-title::before {
+    content: '📖';
+    font-size: 1.2rem;
+}
+
+.text-material .material-title::before {
+    content: '📄';
+}
+
+.vocabulary-material .material-title::before {
+    content: '📚';
+}
+
+.image-material .material-title::before {
+    content: '🖼️';
+}
+
+.quiz-material .material-title::before {
+    content: '❓';
+}
+
+.material-content {
+    line-height: 1.8;
+    color: var(--text-primary);
+}
+
+.material-content p {
+    margin-bottom: 1rem;
+}
+
+.arabic-text {
+    font-size: 1.4rem;
+    line-height: 2;
+    color: var(--primary-brown);
+    font-weight: 500;
+    text-align: right;
+    background: rgba(200, 168, 130, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.english-text {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+}
+
+/* Lesson Navigation Footer */
+.lesson-navigation-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(200, 168, 130, 0.2);
+}
+
+.lesson-actions-center {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: var(--primary-gold);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: var(--primary-brown);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nav-btn:disabled {
+    background: rgba(200, 168, 130, 0.3);
+    color: rgba(107, 91, 74, 0.5);
+    cursor: not-allowed;
+}
+
+.back-btn {
+    background: rgba(200, 168, 130, 0.2);
+    color: var(--primary-brown);
+}
+
+.back-btn:hover {
+    background: rgba(200, 168, 130, 0.3);
+}
+
+.action-btn.complete-lesson {
+    background: var(--success-color, #10b981);
+    color: white;
+}
+
+.action-btn.restart-lesson {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Lesson Sidebar */
+.lesson-sidebar {
+    position: fixed;
+    right: -400px;
+    top: 0;
+    width: 400px;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.lesson-sidebar.active {
+    right: 0;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(200, 168, 130, 0.2);
+}
+
+.sidebar-header h3 {
+    font-family: 'Crimson Text', serif;
+    color: var(--primary-brown);
+    margin: 0;
+}
+
+.close-sidebar {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.close-sidebar:hover {
+    background: rgba(200, 168, 130, 0.1);
+    color: var(--primary-brown);
+}
+
+.notes-textarea {
+    width: 100%;
+    min-height: 300px;
+    border: 1px solid rgba(200, 168, 130, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.6;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+
+.sidebar-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-secondary {
+    padding: 0.75rem 1.5rem;
+    background: rgba(200, 168, 130, 0.1);
+    border: 1px solid rgba(200, 168, 130, 0.3);
+    border-radius: 8px;
+    color: var(--primary-brown);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    padding: 0.75rem 1.5rem;
+    background: var(--primary-gold);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: var(--primary-brown);
+    transform: translateY(-1px);
+}
+
+/* No Materials / Placeholder Content Styling */
+.no-materials {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, rgba(200, 168, 130, 0.1), rgba(186, 147, 109, 0.1));
+    border: 2px dashed rgba(200, 168, 130, 0.3);
+    border-radius: 12px;
+    margin: 2rem 0;
+}
+
+.no-materials .ornament-top,
+.no-materials .ornament-bottom {
+    font-size: 2rem;
+    color: var(--primary-gold);
+    margin: 1rem 0;
+    opacity: 0.8;
+}
+
+.no-materials h3 {
+    color: var(--primary-brown);
+    font-family: 'Crimson Text', serif;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.content-preview {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 2rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    text-align: left;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.content-preview h4 {
+    color: var(--primary-brown);
+    font-family: 'Crimson Text', serif;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.content-preview ul {
+    list-style: none;
+    padding: 0;
+}
+
+.content-preview li {
+    padding: 0.5rem 0;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.placeholder-message {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(186, 147, 109, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-gold);
+}
+
+.placeholder-message p {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Enhanced Placeholder Content */
+.placeholder-text,
+.placeholder-vocab p,
+.no-content {
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 1.5rem;
+    background: rgba(200, 168, 130, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-gold);
+    margin: 1rem 0;
+}
+
+.placeholder-image {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    background: linear-gradient(135deg, rgba(200, 168, 130, 0.1), rgba(186, 147, 109, 0.1));
+    border: 2px dashed rgba(200, 168, 130, 0.3);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 2rem;
+}
+
+.image-placeholder-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.placeholder-image p {
+    font-style: italic;
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+/* Sample Vocabulary */
+.sample-vocab {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 6px;
+}
+
+.vocab-item.sample {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(200, 168, 130, 0.1);
+    border-radius: 6px;
+    margin: 0.5rem 0;
+}
+
+.vocab-item.sample .arabic {
+    font-size: 1.2rem;
+    color: var(--primary-brown);
+    font-weight: 500;
+}
+
+.vocab-item.sample .translation {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.sample-vocab-format {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.vocab-note {
+    padding: 0.5rem;
+    background: rgba(186, 147, 109, 0.1);
+    border-radius: 4px;
+    margin-top: 1rem;
+}
+
+.vocab-note small {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Enhanced Vocabulary Display */
+.vocab-item {
+    margin: 0.75rem 0;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-gold);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.vocab-arabic {
+    font-size: 1.3rem;
+    color: var(--primary-brown);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    text-align: right;
+}
+
+.vocab-english {
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Vocabulary Table Styling */
+.vocab-table-container {
+    margin: 1.5rem 0;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.vocab-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: inherit;
+}
+
+.vocab-table th {
+    background: linear-gradient(135deg, var(--primary-gold), rgba(200, 168, 130, 0.8));
+    color: white;
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border: none;
+}
+
+.vocab-header-arabic {
+    text-align: right;
+    border-top-right-radius: 8px;
+}
+
+.vocab-header-english {
+    border-top-left-radius: 8px;
+}
+
+.vocab-table td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(200, 168, 130, 0.2);
+    vertical-align: middle;
+}
+
+.vocab-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.vocab-table tbody tr:hover {
+    background: rgba(200, 168, 130, 0.1);
+}
+
+.vocab-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.vocab-table .vocab-arabic {
+    font-size: 1.4rem;
+    color: var(--primary-brown);
+    font-weight: 600;
+    text-align: right;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.vocab-table .vocab-english {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* Responsive vocabulary table */
+@media (max-width: 768px) {
+    .vocab-table-container {
+        padding: 1rem;
+    }
+    
+    .vocab-table th,
+    .vocab-table td {
+        padding: 0.75rem 1rem;
+    }
+    
+    .vocab-table .vocab-arabic {
+        font-size: 1.2rem;
+    }
+    
+    .vocab-table .vocab-english {
+        font-size: 1rem;
+    }
+}
+
+/* Enhanced Quiz Styling */
+.quiz-placeholder {
+    margin-top: 1.5rem;
+}
+
+.quiz-options-preview {
+    margin: 1rem 0;
+}
+
+.option-placeholder {
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    background: rgba(200, 168, 130, 0.1);
+    border: 1px solid rgba(200, 168, 130, 0.3);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-style: italic;
+    cursor: default;
+}
+
+.quiz-note {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(186, 147, 109, 0.1);
+    border-radius: 6px;
+    margin-top: 1rem;
+}
+
+.quiz-note em {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.question-content {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-gold);
+    margin-bottom: 1rem;
+}
+
+.question-content p {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* Enhanced Image Display */
+.image-container {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.lesson-image-container {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.lesson-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: zoom-in;
+}
+
+.lesson-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.image-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+    border: 2px dashed rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    color: #dc2626;
+    text-align: center;
+    padding: 2rem;
+}
+
+.image-fallback .image-placeholder-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.image-caption {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(200, 168, 130, 0.1);
+    border-radius: 8px;
+    font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Progress Dots Enhancement */
+.progress-dots {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.progress-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(200, 168, 130, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.progress-dot.active {
+    background: var(--primary-gold);
+    transform: scale(1.3);
+    box-shadow: 0 0 0 3px rgba(200, 168, 130, 0.3);
+}
+
+.progress-dot.completed {
+    background: var(--success-color, #10b981);
+}
+
+.progress-dot:hover {
+    transform: scale(1.2);
+}
+
+/* Mobile Responsive Improvements */
+@media (max-width: 768px) {
+    .lesson-header {
+        padding: 1.5rem;
+    }
+    
+    .lesson-meta {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .lesson-title {
+        font-size: 2rem;
+    }
+    
+    .lesson-materials {
+        padding: 1.5rem;
+    }
+    
+    .material-item {
+        padding: 1.5rem;
+    }
+    
+    .lesson-navigation-footer {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .lesson-actions-center {
+        order: -1;
+    }
+    
+    .nav-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .lesson-sidebar {
+        width: 100%;
+        right: -100%;
+    }
+    
+    /* Adjust fixed progress indicator for mobile */
+    .lesson-progress-indicator {
+        top: 80px; /* Account for navbar on mobile */
+        right: 15px; /* Proper margin for mobile */
+        padding: 0.75rem;
+        transform: scale(0.9);
+    }
+    
+    .progress-circle {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .progress-circle::before {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .progress-percent {
+        font-size: 0.8rem;
+    }
+}

@@ -19,7 +19,7 @@ let lessonProgress = 0;
 let lessonTitle, courseTitle, lessonType, lessonDuration, lessonNumber;
 let lessonMaterials, lessonLoading, lessonNavFooter, progressDots;
 let backToCourseBtn, prevLessonBtn, nextLessonBtn, completeLessonBtn;
-let bookmarkBtn, notesBtn, lessonSidebar, notesTextarea;
+let notesBtn, lessonSidebar, notesTextarea;
 let progressCircle, progressPercent, errorMessage, successMessage;
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -70,7 +70,6 @@ function getDOMElements() {
     nextLessonBtn = document.getElementById('nextLessonBtn');
     completeLessonBtn = document.getElementById('completeLessonBtn');
     
-    bookmarkBtn = document.getElementById('bookmarkBtn');
     notesBtn = document.getElementById('notesBtn');
     lessonSidebar = document.getElementById('lessonSidebar');
     notesTextarea = document.getElementById('notesTextarea');
@@ -94,15 +93,20 @@ async function loadLessonData(lessonId, courseId) {
                 lesson_materials (*)
             `)
             .eq('id', lessonId)
-            .eq('is_published', true)
             .single();
 
         if (lessonError) {
-            throw lessonError;
+            console.error('Lesson query error:', lessonError);
+            throw new Error(`Database error: ${lessonError.message}`);
         }
 
         if (!lesson) {
-            throw new Error('Lesson not found or not published');
+            throw new Error('Lesson not found');
+        }
+
+        // Check if lesson is published (allow admin preview if not published)
+        if (!lesson.is_published) {
+            console.warn('Lesson is not published - showing in preview mode');
         }
 
         currentLesson = lesson;
@@ -115,13 +119,15 @@ async function loadLessonData(lessonId, courseId) {
         // Load all lessons in this course for navigation
         const { data: allLessons, error: lessonsError } = await supabase
             .from('lessons')
-            .select('id, title, lesson_order')
+            .select('id, title, lesson_order, is_published')
             .eq('course_id', currentCourse.id)
-            .eq('is_published', true)
             .order('lesson_order', { ascending: true });
 
         if (!lessonsError) {
             courseLessons = allLessons || [];
+        } else {
+            console.warn('Could not load course lessons for navigation:', lessonsError);
+            courseLessons = [lesson]; // At least show current lesson
         }
 
         // Display lesson content
@@ -132,7 +138,14 @@ async function loadLessonData(lessonId, courseId) {
 
     } catch (error) {
         console.error('Error loading lesson:', error);
-        showError('Failed to load lesson content. Please try again.');
+        showError(`Failed to load lesson: ${error.message}. Please try again.`);
+        
+        // Provide fallback navigation
+        setTimeout(() => {
+            if (confirm('Would you like to return to the courses page?')) {
+                window.location.href = 'courses.html';
+            }
+        }, 3000);
     } finally {
         showLoading(false);
     }
@@ -143,33 +156,50 @@ function displayLessonHeader() {
 
     // Update header information
     lessonTitle.textContent = currentLesson.title;
-    courseTitle.textContent = currentCourse.title;
-    lessonType.textContent = lessonMaterialsData.length > 0 ? 
-        `${lessonMaterialsData.length} Materials` : 'Content';
+    courseTitle.textContent = ''; // Hide course title
+    lessonType.textContent = ''; // Hide materials count
     lessonDuration.textContent = `${currentLesson.duration_minutes} min`;
     lessonNumber.textContent = `Lesson ${currentLesson.lesson_order}`;
 
     // Update page title
     document.title = `${currentLesson.title} - ${currentCourse.title} - IQA`;
 
-    // Style lesson type badge to show material count
-    lessonType.className = `lesson-type content`;
+    // Hide the course title and lesson type elements
+    courseTitle.style.display = 'none';
+    lessonType.style.display = 'none';
 }
 
 function displayLessonMaterials() {
     if (!lessonMaterialsData || lessonMaterialsData.length === 0) {
         lessonMaterials.innerHTML = `
             <div class="no-materials">
-                <h3>No materials available</h3>
-                <p>This lesson content is being prepared. Please check back later.</p>
+                <div class="ornament-top">✦</div>
+                <h3>Lesson Content</h3>
+                <div class="sample-content">
+                    <p class="lesson-intro">Welcome to this lesson! This lesson is currently being prepared with interactive materials.</p>
+                    
+                    <div class="content-preview">
+                        <h4>What you'll learn:</h4>
+                        <ul>
+                            <li>🎯 Key Quranic Arabic concepts</li>
+                            <li>📚 Essential vocabulary and grammar</li>
+                            <li>🔤 Reading and comprehension skills</li>
+                            <li>💡 Practical application exercises</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="placeholder-message">
+                        <p><em>Interactive materials and exercises are being added to this lesson. Please check back soon for the complete learning experience!</em></p>
+                    </div>
+                </div>
+                <div class="ornament-bottom">✦</div>
             </div>
         `;
-        return;
+    } else {
+        lessonMaterials.innerHTML = lessonMaterialsData.map((material, index) => {
+            return renderMaterial(material, index);
+        }).join('');
     }
-
-    lessonMaterials.innerHTML = lessonMaterialsData.map((material, index) => {
-        return renderMaterial(material, index);
-    }).join('');
 
     // Show materials and navigation
     lessonMaterials.style.display = 'block';
@@ -181,35 +211,74 @@ function renderMaterial(material, index) {
     
     switch (material.material_type) {
         case 'text':
+            const textContent = material.content && material.content.trim() ? 
+                formatTextContent(material.content) : 
+                `<p class="placeholder-text">📝 <em>${material.title || 'Text content'} is being prepared. This will contain important lesson information and explanations.</em></p>`;
+            
             return `
                 <div class="material-item text-material ${isActive ? 'active' : ''}" data-index="${index}">
-                    ${material.title ? `<h3 class="material-title">${escapeHtml(material.title)}</h3>` : ''}
+                    <h3 class="material-title">${escapeHtml(material.title || 'Reading Material')}</h3>
                     <div class="material-content">
-                        ${formatTextContent(material.content)}
+                        ${textContent}
                     </div>
                 </div>
             `;
             
         case 'vocabulary':
+            const vocabContent = material.content && material.content.trim() ? 
+                renderVocabularyContent(material.content) : 
+                `<div class="placeholder-vocab">
+                    <p>📚 <em>Vocabulary list for "${material.title || 'this section'}" is being prepared.</em></p>
+                    <div class="sample-vocab">
+                        <div class="vocab-item sample">
+                            <span class="arabic">Example: السَّلَامُ عَلَيْكُمْ</span>
+                            <span class="translation">Peace be upon you</span>
+                        </div>
+                    </div>
+                </div>`;
+                
             return `
                 <div class="material-item vocabulary-material ${isActive ? 'active' : ''}" data-index="${index}">
-                    <h3 class="material-title">${material.title || 'Vocabulary'}</h3>
+                    <h3 class="material-title">${escapeHtml(material.title || 'Vocabulary')}</h3>
                     <div class="vocabulary-list">
-                        ${renderVocabularyContent(material.content)}
+                        ${vocabContent}
                     </div>
                 </div>
             `;
             
         case 'image':
+            const hasValidImage = material.file_url && (material.file_url.startsWith('data:image') || material.file_url.startsWith('http'));
+            let imageContent;
+            
+            if (hasValidImage) {
+                imageContent = `
+                    <div class="lesson-image-container">
+                        <img src="${material.file_url}" 
+                             alt="${escapeHtml(material.title || 'Lesson image')}" 
+                             class="lesson-image"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                             onload="console.log('Image loaded successfully')">
+                        <div class="image-fallback" style="display: none;">
+                            <div class="image-placeholder-icon">🖼️</div>
+                            <p><em>Image could not be loaded</em></p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                imageContent = `
+                    <div class="placeholder-image">
+                        <div class="image-placeholder-icon">🖼️</div>
+                        <p><em>Image for "${escapeHtml(material.title || 'this section')}" will be added soon</em></p>
+                    </div>
+                `;
+            }
+                
             return `
                 <div class="material-item image-material ${isActive ? 'active' : ''}" data-index="${index}">
-                    ${material.title ? `<h3 class="material-title">${escapeHtml(material.title)}</h3>` : ''}
+                    <h3 class="material-title">${escapeHtml(material.title || 'Visual Content')}</h3>
                     <div class="image-container">
-                        ${material.file_url ? 
-                            `<img src="${material.file_url}" alt="${escapeHtml(material.title || 'Lesson image')}" class="lesson-image">` :
-                            `<div class="placeholder-image">📷 Image not available</div>`
-                        }
-                        ${material.content ? `<p class="image-caption">${escapeHtml(material.content)}</p>` : ''}
+                        ${imageContent}
+                        ${material.content && material.content.trim() ? `<p class="image-caption">${escapeHtml(material.content)}</p>` : ''}
                     </div>
                 </div>
             `;
@@ -217,7 +286,7 @@ function renderMaterial(material, index) {
         case 'quiz_question':
             return `
                 <div class="material-item quiz-material ${isActive ? 'active' : ''}" data-index="${index}">
-                    <h3 class="material-title">${material.title || 'Quiz Question'}</h3>
+                    <h3 class="material-title">${escapeHtml(material.title || 'Knowledge Check')}</h3>
                     <div class="quiz-content">
                         ${renderQuizContent(material.content, material.metadata)}
                     </div>
@@ -227,9 +296,9 @@ function renderMaterial(material, index) {
         default:
             return `
                 <div class="material-item generic-material ${isActive ? 'active' : ''}" data-index="${index}">
-                    ${material.title ? `<h3 class="material-title">${escapeHtml(material.title)}</h3>` : ''}
+                    <h3 class="material-title">${escapeHtml(material.title || 'Learning Material')}</h3>
                     <div class="material-content">
-                        <p>${escapeHtml(material.content || 'Content not available')}</p>
+                        <p>${escapeHtml(material.content || '📋 Content for this section is being prepared.')}</p>
                     </div>
                 </div>
             `;
@@ -237,40 +306,151 @@ function renderMaterial(material, index) {
 }
 
 function formatTextContent(content) {
-    if (!content) return '<p>No content available</p>';
+    if (!content || !content.trim()) {
+        return '<p class="no-content">📝 <em>Text content is being prepared for this section.</em></p>';
+    }
     
     // Split content by paragraphs and format
-    const paragraphs = content.split('\n\n');
+    const paragraphs = content.split('\n\n').filter(p => p.trim());
+    
+    if (paragraphs.length === 0) {
+        return '<p class="no-content">📝 <em>Text content is being prepared for this section.</em></p>';
+    }
+    
     return paragraphs.map(p => {
-        if (p.trim().startsWith('بِسْمِ اللَّهِ') || /[\u0600-\u06FF]/.test(p)) {
+        const trimmed = p.trim();
+        if (trimmed.startsWith('بِسْمِ اللَّهِ') || /[\u0600-\u06FF]/.test(trimmed)) {
             // Arabic text
-            return `<p class="arabic-text" dir="rtl">${escapeHtml(p.trim())}</p>`;
+            return `<p class="arabic-text" dir="rtl">${escapeHtml(trimmed)}</p>`;
         } else {
             // English text
-            return `<p class="english-text">${escapeHtml(p.trim())}</p>`;
+            return `<p class="english-text">${escapeHtml(trimmed)}</p>`;
         }
     }).join('');
 }
 
 function renderVocabularyContent(content) {
-    if (!content) return '<p>No vocabulary items available</p>';
+    if (!content || !content.trim()) {
+        return `
+            <div class="placeholder-vocab">
+                <p>📚 <em>Vocabulary items for this lesson are being prepared.</em></p>
+                <div class="sample-vocab-format">
+                    <div class="vocab-note">
+                        <small>Format: Arabic term | Pronunciation | English meaning</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
     
-    // For now, display as formatted text
-    // In a full implementation, this could parse JSON vocabulary data
+    // Parse vocabulary content into table format
+    const lines = content.split('\n').filter(line => line.trim());
+    
+    if (lines.length === 0) {
+        return renderVocabularyContent(''); // Use placeholder
+    }
+    
+    let tableRows = '';
+    let currentArabic = '';
+    let currentEnglish = '';
+    
+    for (const line of lines) {
+        const trimmed = line.trim();
+        
+        // Skip header lines or empty lines
+        if (trimmed.includes(':') || trimmed.toLowerCase().includes('terms') || 
+            trimmed.toLowerCase().includes('vocabulary') || trimmed === '') {
+            continue;
+        }
+        
+        // Check if line contains Arabic text
+        if (/[\u0600-\u06FF]/.test(trimmed)) {
+            // If we have a previous pair, add it to table
+            if (currentArabic && currentEnglish) {
+                tableRows += `
+                    <tr>
+                        <td class="vocab-arabic" dir="rtl">${escapeHtml(currentArabic)}</td>
+                        <td class="vocab-english">${escapeHtml(currentEnglish)}</td>
+                    </tr>
+                `;
+            }
+            currentArabic = trimmed;
+            currentEnglish = '';
+        } else if (currentArabic && !currentEnglish) {
+            // This is likely the English translation
+            currentEnglish = trimmed;
+        } else if (!currentArabic) {
+            // Handle case where English comes first
+            currentEnglish = trimmed;
+        }
+    }
+    
+    // Add the last pair if exists
+    if (currentArabic && currentEnglish) {
+        tableRows += `
+            <tr>
+                <td class="vocab-arabic" dir="rtl">${escapeHtml(currentArabic)}</td>
+                <td class="vocab-english">${escapeHtml(currentEnglish)}</td>
+            </tr>
+        `;
+    }
+    
+    // If no proper pairs found, display as simple list
+    if (!tableRows) {
+        return lines.map(line => {
+            const trimmed = line.trim();
+            if (/[\u0600-\u06FF]/.test(trimmed)) {
+                return `
+                    <div class="vocab-item">
+                        <div class="vocab-arabic" dir="rtl">${escapeHtml(trimmed)}</div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="vocab-item">
+                        <div class="vocab-english">${escapeHtml(trimmed)}</div>
+                    </div>
+                `;
+            }
+        }).join('');
+    }
+    
     return `
-        <div class="vocab-item">
-            <div class="vocab-content">${formatTextContent(content)}</div>
+        <div class="vocab-table-container">
+            <table class="vocab-table">
+                <thead>
+                    <tr>
+                        <th class="vocab-header-arabic">Arabic</th>
+                        <th class="vocab-header-english">English</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
         </div>
     `;
 }
 
 function renderQuizContent(content, metadata) {
-    // Simple quiz rendering - could be enhanced with interactive features
+    const questionText = content && content.trim() ? 
+        escapeHtml(content) : 
+        'Interactive quiz question will be added here';
+        
     return `
         <div class="quiz-question">
-            <p>${escapeHtml(content || 'Quiz question content not available')}</p>
-            <div class="quiz-note">
-                <em>Interactive quiz features will be added in future updates</em>
+            <div class="question-content">
+                <p>❓ ${questionText}</p>
+            </div>
+            <div class="quiz-placeholder">
+                <div class="quiz-options-preview">
+                    <div class="option-placeholder">○ Answer option A</div>
+                    <div class="option-placeholder">○ Answer option B</div>
+                    <div class="option-placeholder">○ Answer option C</div>
+                </div>
+                <div class="quiz-note">
+                    <em>💡 Interactive quiz features will be fully implemented in the next update</em>
+                </div>
             </div>
         </div>
     `;
@@ -362,9 +542,7 @@ function setupEventListeners() {
     });
 
     // Bookmark functionality
-    bookmarkBtn.addEventListener('click', () => {
-        toggleBookmark();
-    });
+    // Removed per user request
 
     // Keyboard navigation
     document.addEventListener('keydown', handleKeyboardNavigation);
@@ -422,10 +600,7 @@ function saveNotes() {
 }
 
 function toggleBookmark() {
-    bookmarkBtn.classList.toggle('active');
-    const isBookmarked = bookmarkBtn.classList.contains('active');
-    console.log('Lesson bookmarked:', isBookmarked);
-    showSuccess(isBookmarked ? 'Lesson bookmarked!' : 'Bookmark removed!');
+    // Bookmark functionality removed per user request
 }
 
 function handleKeyboardNavigation(e) {

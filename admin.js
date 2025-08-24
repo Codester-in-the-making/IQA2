@@ -602,36 +602,45 @@ function renderMaterialBuilder() {
         let materialInputs = '';
         
         if (material.type === 'image') {
+            const hasImage = material.file_url && material.file_url.startsWith('data:image');
             materialInputs = `
-                <input type="text" class="material-title-input" value="${material.title}" 
+                <input type="text" class="material-title-input" value="${escapeHtml(material.title)}" 
                        onchange="updateMaterial(${index}, 'title', this.value)" placeholder="Image title...">
                 <div class="image-upload-section">
                     <input type="file" class="material-image-input" id="imageInput${index}" 
                            accept="image/*" onchange="handleImageUpload(${index}, this)">
                     <label for="imageInput${index}" class="image-upload-label">
-                        <span class="upload-icon">📁</span>
+                        <span class="upload-icon">🖼️</span>
                         <span class="upload-text">Choose Image File</span>
                     </label>
-                    ${material.file_url ? `<div class="image-preview"><img src="${material.file_url}" alt="Preview" class="preview-image"><span class="image-name">${material.fileName || 'Uploaded image'}</span></div>` : ''}
+                    ${hasImage ? `
+                        <div class="image-preview" style="display: block;">
+                            <img src="${material.file_url}" alt="Preview" class="preview-image">
+                            <span class="image-name">${escapeHtml(material.fileName || 'Uploaded image')}</span>
+                            <button type="button" class="btn-small delete" onclick="clearImageUpload(${index})">
+                                Clear Image
+                            </button>
+                        </div>
+                    ` : '<div class="image-preview" style="display: none;"></div>'}
                 </div>
                 <textarea class="material-content-input" rows="2" 
                           onchange="updateMaterial(${index}, 'content', this.value)" 
-                          placeholder="Image caption or description...">${material.content}</textarea>
+                          placeholder="Image caption or description...">${escapeHtml(material.content)}</textarea>
             `;
         } else {
             materialInputs = `
-                <input type="text" class="material-title-input" value="${material.title}" 
+                <input type="text" class="material-title-input" value="${escapeHtml(material.title)}" 
                        onchange="updateMaterial(${index}, 'title', this.value)" placeholder="Material title...">
                 <textarea class="material-content-input" rows="3" 
                           onchange="updateMaterial(${index}, 'content', this.value)" 
-                          placeholder="${getMaterialPlaceholder(material.type)}">${material.content}</textarea>
+                          placeholder="${getMaterialPlaceholder(material.type)}">${escapeHtml(material.content)}</textarea>
             `;
         }
         
         return `
             <div class="material-editor" data-material-id="${material.id}">
                 <div class="material-header">
-                    <h4>${capitalizeFirst(material.type)} - ${material.title}</h4>
+                    <h4>${capitalizeFirst(material.type)} - ${escapeHtml(material.title)}</h4>
                     <div class="material-controls">
                         <button type="button" class="btn-small" onclick="moveMaterial(${index}, 'up')" ${index === 0 ? 'disabled' : ''}>↑</button>
                         <button type="button" class="btn-small" onclick="moveMaterial(${index}, 'down')" ${index === lessonMaterials.length - 1 ? 'disabled' : ''}>↓</button>
@@ -644,6 +653,22 @@ function renderMaterialBuilder() {
             </div>
         `;
     }).join('');
+}
+
+function clearImageUpload(index) {
+    if (lessonMaterials[index]) {
+        lessonMaterials[index].file_url = null;
+        lessonMaterials[index].fileName = null;
+        
+        // Clear the file input
+        const fileInput = document.getElementById(`imageInput${index}`);
+        if (fileInput) {
+            fileInput.value = '';
+        }
+        
+        renderMaterialBuilder();
+        showSuccessMessage('Image cleared successfully!');
+    }
 }
 
 function getMaterialPlaceholder(materialType) {
@@ -709,15 +734,31 @@ function handleImageUpload(index, input) {
         return;
     }
     
+    showSuccessMessage('Processing image...');
+    
     // Convert to base64 for storage
     const reader = new FileReader();
     reader.onload = function(e) {
-        if (lessonMaterials[index]) {
-            lessonMaterials[index].file_url = e.target.result;
-            lessonMaterials[index].fileName = file.name;
-            renderMaterialBuilder();
+        try {
+            if (lessonMaterials[index]) {
+                lessonMaterials[index].file_url = e.target.result;
+                lessonMaterials[index].fileName = file.name;
+                console.log('Image uploaded successfully:', file.name);
+                console.log('Base64 length:', e.target.result.length);
+                renderMaterialBuilder();
+                showSuccessMessage(`Image "${file.name}" uploaded successfully!`);
+            }
+        } catch (error) {
+            console.error('Error processing image:', error);
+            showErrorMessage('Failed to process image.');
         }
     };
+    
+    reader.onerror = function() {
+        showErrorMessage('Failed to read image file.');
+        input.value = '';
+    };
+    
     reader.readAsDataURL(file);
 }
 
