@@ -9,7 +9,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // DOM Elements
 let courseForm, coursesList, loadingMessage, successMessage, errorMessage;
 let lessonForm, lessonManagementSection, courseManagementSection, selectedCourseInfo;
-let existingLessons, materialBuilder, materialsList;
+let existingLessons, materialsList;
 let currentSelectedCourse = null;
 let lessonMaterials = [];
 
@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
     courseManagementSection = document.getElementById('courseManagementSection');
     selectedCourseInfo = document.getElementById('selectedCourseInfo');
     existingLessons = document.getElementById('existingLessons');
-    materialBuilder = document.getElementById('materialBuilder');
     materialsList = document.getElementById('materialsList');
 
     // Set up event listeners
@@ -331,9 +330,9 @@ function setupLessonEventListeners() {
     }
     
     // Reset lesson form
-    const resetLessonForm = document.getElementById('resetLessonForm');
-    if (resetLessonForm) {
-        resetLessonForm.addEventListener('click', resetLessonForm);
+    const resetLessonFormBtn = document.getElementById('resetLessonForm');
+    if (resetLessonFormBtn) {
+        resetLessonFormBtn.addEventListener('click', resetLessonFormData);
     }
     
     // Material builder buttons
@@ -440,7 +439,6 @@ function displayExistingLessons(lessons) {
                 <div class="lesson-title-section">
                     <h4 class="lesson-title">Lesson ${lesson.lesson_order}: ${escapeHtml(lesson.title)}</h4>
                     <div class="lesson-meta">
-                        <span class="lesson-type ${lesson.lesson_type}">${capitalizeFirst(lesson.lesson_type)}</span>
                         <span class="lesson-duration">${lesson.duration_minutes} min</span>
                         <span class="material-count">${lesson.lesson_materials ? lesson.lesson_materials.length : 0} materials</span>
                     </div>
@@ -490,10 +488,10 @@ async function handleLessonSubmission(e) {
         const lessonData = {
             course_id: currentSelectedCourse.id,
             title: formData.get('title').trim(),
-            content: formData.get('content').trim(),
             lesson_order: parseInt(formData.get('lesson_order')),
-            lesson_type: formData.get('lesson_type'),
             duration_minutes: parseInt(formData.get('duration_minutes')),
+            lesson_type: 'content', // Default type since materials define the actual content type
+            content: 'Lesson content is defined by materials', // Placeholder since materials contain the actual content
             is_published: formData.get('is_published') === 'on'
         };
         
@@ -536,11 +534,6 @@ function validateLessonData(data) {
         return false;
     }
     
-    if (!data.content || data.content.length < 10) {
-        showErrorMessage('Lesson content must be at least 10 characters long.');
-        return false;
-    }
-    
     if (!data.lesson_order || data.lesson_order < 1) {
         showErrorMessage('Lesson order must be a positive number.');
         return false;
@@ -548,6 +541,12 @@ function validateLessonData(data) {
     
     if (!data.duration_minutes || data.duration_minutes < 5) {
         showErrorMessage('Lesson duration must be at least 5 minutes.');
+        return false;
+    }
+    
+    // Check if at least one material is added
+    if (lessonMaterials.length === 0) {
+        showErrorMessage('Please add at least one material to the lesson.');
         return false;
     }
     
@@ -561,6 +560,7 @@ async function createLessonMaterials(lessonId) {
             material_type: material.type,
             title: material.title,
             content: material.content,
+            file_url: material.file_url || null, // Include file_url for images
             material_order: material.order,
             metadata: material.metadata || {}
         };
@@ -594,29 +594,56 @@ function addMaterial(materialType) {
 
 function renderMaterialBuilder() {
     if (lessonMaterials.length === 0) {
-        materialsList.innerHTML = '<p class="no-materials">No materials added yet. Use the buttons above to add content.</p>';
+        materialsList.innerHTML = '<p class="no-materials">No materials added yet. Use the buttons above to build your lesson content.</p>';
         return;
     }
     
-    materialsList.innerHTML = lessonMaterials.map((material, index) => `
-        <div class="material-editor" data-material-id="${material.id}">
-            <div class="material-header">
-                <h4>${capitalizeFirst(material.type)} - ${material.title}</h4>
-                <div class="material-controls">
-                    <button type="button" class="btn-small" onclick="moveMaterial(${index}, 'up')" ${index === 0 ? 'disabled' : ''}>↑</button>
-                    <button type="button" class="btn-small" onclick="moveMaterial(${index}, 'down')" ${index === lessonMaterials.length - 1 ? 'disabled' : ''}>↓</button>
-                    <button type="button" class="btn-small delete" onclick="removeMaterial(${index})">×</button>
+    materialsList.innerHTML = lessonMaterials.map((material, index) => {
+        let materialInputs = '';
+        
+        if (material.type === 'image') {
+            materialInputs = `
+                <input type="text" class="material-title-input" value="${material.title}" 
+                       onchange="updateMaterial(${index}, 'title', this.value)" placeholder="Image title...">
+                <div class="image-upload-section">
+                    <input type="file" class="material-image-input" id="imageInput${index}" 
+                           accept="image/*" onchange="handleImageUpload(${index}, this)">
+                    <label for="imageInput${index}" class="image-upload-label">
+                        <span class="upload-icon">📁</span>
+                        <span class="upload-text">Choose Image File</span>
+                    </label>
+                    ${material.file_url ? `<div class="image-preview"><img src="${material.file_url}" alt="Preview" class="preview-image"><span class="image-name">${material.fileName || 'Uploaded image'}</span></div>` : ''}
                 </div>
-            </div>
-            <div class="material-inputs">
+                <textarea class="material-content-input" rows="2" 
+                          onchange="updateMaterial(${index}, 'content', this.value)" 
+                          placeholder="Image caption or description...">${material.content}</textarea>
+            `;
+        } else {
+            materialInputs = `
                 <input type="text" class="material-title-input" value="${material.title}" 
                        onchange="updateMaterial(${index}, 'title', this.value)" placeholder="Material title...">
                 <textarea class="material-content-input" rows="3" 
                           onchange="updateMaterial(${index}, 'content', this.value)" 
                           placeholder="${getMaterialPlaceholder(material.type)}">${material.content}</textarea>
+            `;
+        }
+        
+        return `
+            <div class="material-editor" data-material-id="${material.id}">
+                <div class="material-header">
+                    <h4>${capitalizeFirst(material.type)} - ${material.title}</h4>
+                    <div class="material-controls">
+                        <button type="button" class="btn-small" onclick="moveMaterial(${index}, 'up')" ${index === 0 ? 'disabled' : ''}>↑</button>
+                        <button type="button" class="btn-small" onclick="moveMaterial(${index}, 'down')" ${index === lessonMaterials.length - 1 ? 'disabled' : ''}>↓</button>
+                        <button type="button" class="btn-small delete" onclick="removeMaterial(${index})">×</button>
+                    </div>
+                </div>
+                <div class="material-inputs">
+                    ${materialInputs}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function getMaterialPlaceholder(materialType) {
@@ -662,6 +689,36 @@ function removeMaterial(index) {
     });
     
     renderMaterialBuilder();
+}
+
+function handleImageUpload(index, input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        showErrorMessage('Please select a valid image file.');
+        input.value = '';
+        return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showErrorMessage('Image file size must be less than 5MB.');
+        input.value = '';
+        return;
+    }
+    
+    // Convert to base64 for storage
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        if (lessonMaterials[index]) {
+            lessonMaterials[index].file_url = e.target.result;
+            lessonMaterials[index].fileName = file.name;
+            renderMaterialBuilder();
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
 function resetLessonFormData() {

@@ -144,15 +144,16 @@ function displayLessonHeader() {
     // Update header information
     lessonTitle.textContent = currentLesson.title;
     courseTitle.textContent = currentCourse.title;
-    lessonType.textContent = capitalizeFirst(currentLesson.lesson_type);
+    lessonType.textContent = lessonMaterialsData.length > 0 ? 
+        `${lessonMaterialsData.length} Materials` : 'Content';
     lessonDuration.textContent = `${currentLesson.duration_minutes} min`;
     lessonNumber.textContent = `Lesson ${currentLesson.lesson_order}`;
 
     // Update page title
     document.title = `${currentLesson.title} - ${currentCourse.title} - IQA`;
 
-    // Style lesson type badge
-    lessonType.className = `lesson-type ${currentLesson.lesson_type}`;
+    // Style lesson type badge to show material count
+    lessonType.className = `lesson-type content`;
 }
 
 function displayLessonMaterials() {

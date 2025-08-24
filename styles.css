@@ -1786,6 +1786,30 @@ body {
     border: 1px solid rgba(200, 168, 130, 0.2);
 }
 
+/* Integrated Materials Section */
+.materials-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: rgba(245, 242, 237, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(200, 168, 130, 0.2);
+}
+
+.materials-title {
+    font-family: 'Crimson Text', serif;
+    font-size: 1.3rem;
+    color: #6b5b4a;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.materials-description {
+    color: #a0958a;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    font-style: italic;
+}
+
 /* Material Builder */
 .material-builder {
     background: rgba(255, 255, 255, 0.8);
@@ -1859,6 +1883,62 @@ body {
 .material-content-input {
     resize: vertical;
     min-height: 80px;
+}
+
+/* Image Upload Styles */
+.image-upload-section {
+    margin: 0.5rem 0;
+}
+
+.material-image-input {
+    display: none;
+}
+
+.image-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.2rem;
+    background: rgba(200, 168, 130, 0.1);
+    border: 2px dashed rgba(200, 168, 130, 0.4);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #6b5b4a;
+    font-weight: 500;
+}
+
+.image-upload-label:hover {
+    background: rgba(200, 168, 130, 0.2);
+    border-color: rgba(200, 168, 130, 0.6);
+    transform: translateY(-1px);
+}
+
+.upload-icon {
+    font-size: 1.2rem;
+}
+
+.image-preview {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(200, 168, 130, 0.2);
+}
+
+.preview-image {
+    max-width: 200px;
+    max-height: 150px;
+    border-radius: 6px;
+    object-fit: cover;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.image-name {
+    font-size: 0.9rem;
+    color: #6b5b4a;
+    font-weight: 500;
 }
 
 /* Responsive Design */

@@ -27,6 +27,7 @@ Building a comprehensive web platform for learning Quranic Arabic with user acco
 - **File Created**: `admin.js` - Supabase integration and admin functionality
 - **Database**: Courses table with full schema (id, title, description, level, lesson_count, duration_weeks, is_published)
 - **Features**: Course creation, deletion, publish/unpublish, real-time listing
+- **ENHANCED**: **Integrated lesson management with unified material builder workflow**
 
 ### 🔄 **Courses Page Enhancement**
 - **Updated**: `courses.html` - Now loads courses dynamically from Supabase

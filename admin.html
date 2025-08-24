@@ -131,24 +131,29 @@
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="lessonType" class="form-label">Lesson Type</label>
-                                <select id="lessonType" name="lesson_type" class="form-select" required>
-                                    <option value="content">Content</option>
-                                    <option value="quiz">Quiz</option>
-                                    <option value="exercise">Exercise</option>
-                                    <option value="vocabulary">Vocabulary</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
                                 <label for="lessonDuration" class="form-label">Duration (minutes)</label>
                                 <input type="number" id="lessonDuration" name="duration_minutes" class="form-input" min="5" max="120" placeholder="15" required>
                             </div>
+                            <div class="form-group">
+                                <!-- Empty group for layout balance -->
+                            </div>
                         </div>
-                        
-                        <div class="form-group full-width">
-                            <label for="lessonContent" class="form-label">Lesson Content</label>
-                            <textarea id="lessonContent" name="content" class="form-textarea" rows="4" 
-                                      placeholder="Provide the main content for this lesson..." required></textarea>
+
+                        <!-- Material Builder Section (Integrated) -->
+                        <div class="materials-section">
+                            <h4 class="materials-title">Lesson Materials</h4>
+                            <p class="materials-description">Build your lesson content using different material types. Materials will be displayed in the order you add them.</p>
+                            
+                            <div class="material-controls">
+                                <button type="button" class="material-btn" data-type="text">+ Text Content</button>
+                                <button type="button" class="material-btn" data-type="vocabulary">+ Vocabulary</button>
+                                <button type="button" class="material-btn" data-type="image">+ Image</button>
+                                <button type="button" class="material-btn" data-type="quiz_question">+ Quiz Question</button>
+                            </div>
+                            
+                            <div class="materials-list" id="materialsList">
+                                <p class="no-materials">No materials added yet. Use the buttons above to build your lesson content.</p>
+                            </div>
                         </div>
                         
                         <div class="form-group checkbox-group">
@@ -167,22 +172,6 @@
                             </button>
                         </div>
                     </form>
-                </div>
-
-                <!-- Material Builder Section -->
-                <div class="material-builder-section">
-                    <h3 class="subsection-title">Lesson Materials Builder</h3>
-                    <div class="material-builder" id="materialBuilder">
-                        <div class="material-controls">
-                            <button type="button" class="material-btn" data-type="text">+ Text Content</button>
-                            <button type="button" class="material-btn" data-type="vocabulary">+ Vocabulary</button>
-                            <button type="button" class="material-btn" data-type="image">+ Image</button>
-                            <button type="button" class="material-btn" data-type="quiz_question">+ Quiz Question</button>
-                        </div>
-                        <div class="materials-list" id="materialsList">
-                            <!-- Dynamic materials will be added here -->
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Existing Lessons for Selected Course -->
