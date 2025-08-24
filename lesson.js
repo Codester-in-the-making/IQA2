@@ -217,7 +217,6 @@ function renderMaterial(material, index) {
             
             return `
                 <div class="material-item text-material ${isActive ? 'active' : ''}" data-index="${index}">
-                    <h3 class="material-title">${escapeHtml(material.title || 'Reading Material')}</h3>
                     <div class="material-content">
                         ${textContent}
                     </div>
@@ -239,7 +238,7 @@ function renderMaterial(material, index) {
                 
             return `
                 <div class="material-item vocabulary-material ${isActive ? 'active' : ''}" data-index="${index}">
-                    <h3 class="material-title">${escapeHtml(material.title || 'Vocabulary')}</h3>
+                    <h3 class="material-title">Vocabulary</h3>
                     <div class="vocabulary-list">
                         ${vocabContent}
                     </div>
@@ -275,7 +274,6 @@ function renderMaterial(material, index) {
                 
             return `
                 <div class="material-item image-material ${isActive ? 'active' : ''}" data-index="${index}">
-                    <h3 class="material-title">${escapeHtml(material.title || 'Visual Content')}</h3>
                     <div class="image-container">
                         ${imageContent}
                         ${material.content && material.content.trim() ? `<p class="image-caption">${escapeHtml(material.content)}</p>` : ''}
@@ -286,7 +284,6 @@ function renderMaterial(material, index) {
         case 'quiz_question':
             return `
                 <div class="material-item quiz-material ${isActive ? 'active' : ''}" data-index="${index}">
-                    <h3 class="material-title">${escapeHtml(material.title || 'Knowledge Check')}</h3>
                     <div class="quiz-content">
                         ${renderQuizContent(material.content, material.metadata)}
                     </div>
@@ -296,7 +293,6 @@ function renderMaterial(material, index) {
         default:
             return `
                 <div class="material-item generic-material ${isActive ? 'active' : ''}" data-index="${index}">
-                    <h3 class="material-title">${escapeHtml(material.title || 'Learning Material')}</h3>
                     <div class="material-content">
                         <p>${escapeHtml(material.content || '📋 Content for this section is being prepared.')}</p>
                     </div>
