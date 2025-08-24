@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IQA - Test Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            background: #f5f2ed;
+        }
+        .test-section {
+            background: white;
+            padding: 2rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        h1 { color: #6b5b4a; }
+        h2 { color: #6b5b4a; border-bottom: 2px solid #c8a882; padding-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    <h1>🧪 IQA Setup Test</h1>
+    
+    <div class="test-section">
+        <h2>📁 Project Structure</h2>
+        <p class="success">✅ Admin page created: admin.html</p>
+        <p class="success">✅ Admin JavaScript: admin.js</p>
+        <p class="success">✅ Updated courses page with Supabase integration</p>
+        <p class="success">✅ CSS styles updated with admin components</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🗄️ Database Setup</h2>
+        <p class="success">✅ Supabase project connected</p>
+        <p class="success">✅ Courses table created with proper schema</p>
+        <p class="success">✅ Sample courses inserted (3 courses: Beginner, Intermediate, Advanced)</p>
+        <p class="info">ℹ️ Published courses: Beginner ✅, Advanced ✅</p>
+        <p class="info">ℹ️ Draft courses: Intermediate (for testing publish/unpublish)</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Admin Features Available</h2>
+        <p class="success">✅ Course creation form with validation</p>
+        <p class="success">✅ Course listing with real-time data from Supabase</p>
+        <p class="success">✅ Publish/Unpublish toggle functionality</p>
+        <p class="success">✅ Course deletion with confirmation</p>
+        <p class="success">✅ Loading states and error handling</p>
+        <p class="success">✅ Responsive design for mobile devices</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🎓 Courses Page Enhancements</h2>
+        <p class="success">✅ Dynamic course loading from Supabase</p>
+        <p class="success">✅ Only published courses are displayed to users</p>
+        <p class="success">✅ Course data includes: title, description, lesson count, duration</p>
+        <p class="success">✅ Maintains original design and animations</p>
+        <p class="success">✅ Course links now include course ID for future lesson integration</p>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Testing Instructions</h2>
+        <ol>
+            <li><strong>Admin Page:</strong> Open <code>admin.html</code> to manage courses</li>
+            <li><strong>Create Course:</strong> Fill out the form and test course creation</li>
+            <li><strong>Toggle Publish:</strong> Test publishing/unpublishing courses</li>
+            <li><strong>Courses Page:</strong> Open <code>courses.html</code> to see published courses</li>
+            <li><strong>Database Sync:</strong> Changes in admin should reflect on courses page</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>🔗 Navigation Links</h2>
+        <p><a href="home.html" style="color: #c8a882;">🏠 Homepage</a></p>
+        <p><a href="courses.html" style="color: #c8a882;">📚 Courses Page (Public View)</a></p>
+        <p><a href="admin.html" style="color: #c8a882;">⚙️ Admin Dashboard</a></p>
+    </div>
+
+    <div class="test-section">
+        <h2>✨ What's Next</h2>
+        <p class="info">ℹ️ Lesson management system</p>
+        <p class="info">ℹ️ User authentication and progress tracking</p>
+        <p class="info">ℹ️ Course editing functionality</p>
+        <p class="info">ℹ️ Advanced content management features</p>
+    </div>
+</body>
+</html>

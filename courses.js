@@ -1,6 +1,125 @@
-// Courses Page JavaScript
+// Courses Page JavaScript with Supabase Integration
+
+// Initialize Supabase client
+const SUPABASE_URL = 'https://dzrfanpquocakcoxvbta.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6cmZhbnBxdW9jYWtjb3h2YnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NDY0MTIsImV4cCI6MjA3MTUyMjQxMn0.CzcEUtpJ_g2oEZQ2quTRbiiwzacdHNPYk9dtWj_7ozE';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Course icon mapping
+const courseIcons = {
+    beginner: '🌱',
+    intermediate: '🌿',
+    advanced: '🌳'
+};
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Load courses from Supabase
+    loadCourses();
     
+    // Initialize other features
+    initializeScrollEffects();
+    initializeKeyboardNavigation();
+});
+
+async function loadCourses() {
+    try {
+        // Show loading state
+        showLoadingState();
+        
+        // Fetch published courses from Supabase
+        const { data: courses, error } = await supabase
+            .from('courses')
+            .select('*')
+            .eq('is_published', true)
+            .order('level', { ascending: true }); // Order: beginner, intermediate, advanced
+
+        if (error) {
+            throw error;
+        }
+
+        // Display courses
+        displayCourses(courses);
+        
+        // Initialize interactions after courses are loaded
+        initializeCourseInteractions();
+        
+    } catch (error) {
+        console.error('Error loading courses:', error);
+        showErrorState();
+    }
+}
+
+function showLoadingState() {
+    const coursesGrid = document.querySelector('.courses-grid');
+    if (coursesGrid) {
+        coursesGrid.innerHTML = `
+            <div class="loading-courses">
+                <div class="loading-spinner">⟳</div>
+                <p>Loading courses...</p>
+            </div>
+        `;
+    }
+}
+
+function showErrorState() {
+    const coursesGrid = document.querySelector('.courses-grid');
+    if (coursesGrid) {
+        coursesGrid.innerHTML = `
+            <div class="error-courses">
+                <p>Unable to load courses. Please try again later.</p>
+                <button onclick="loadCourses()" class="retry-btn">Retry</button>
+            </div>
+        `;
+    }
+}
+
+function displayCourses(courses) {
+    const coursesGrid = document.querySelector('.courses-grid');
+    if (!coursesGrid) return;
+    
+    if (!courses || courses.length === 0) {
+        coursesGrid.innerHTML = `
+            <div class="no-courses">
+                <p>No courses available at the moment.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    coursesGrid.innerHTML = courses.map(course => `
+        <div class="course-card" data-level="${course.level}" data-course-id="${course.id}">
+            <div class="course-icon ${course.level}-plant">${courseIcons[course.level] || '📚'}</div>
+            <h3 class="course-title">${escapeHtml(course.title)}</h3>
+            <p class="course-description">
+                ${escapeHtml(course.description)}
+            </p>
+            <div class="course-stats">
+                <div class="stat-item">
+                    <span class="stat-icon">📚</span>
+                    <span class="stat-text">${course.lesson_count} Lessons</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">⏱️</span>
+                    <span class="stat-text">${escapeHtml(course.duration_weeks)}</span>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Your Progress</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">0% Complete</div>
+            </div>
+            <a href="course-detail.html?id=${course.id}&level=${course.level}" class="course-btn">
+                <span class="btn-text">Start Course</span>
+                <span class="btn-arrow">→</span>
+            </a>
+        </div>
+    `).join('');
+}
+
+function initializeScrollEffects() {
     // Smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -15,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Add scroll effect to navbar (same as homepage)
+    // Add scroll effect to navbar
     window.addEventListener('scroll', function() {
         const navbar = document.querySelector('.navbar');
         if (window.scrollY > 50) {
@@ -25,7 +144,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Enhanced course card interactions
+    // Add subtle parallax effect to background
+    window.addEventListener('scroll', function() {
+        const scrolled = window.pageYOffset;
+        const rate = scrolled * -0.5;
+        document.body.style.backgroundPosition = `0 ${rate}px`;
+    });
+}
+
+function initializeCourseInteractions() {
     const courseCards = document.querySelectorAll('.course-card');
     
     courseCards.forEach((card, index) => {
@@ -44,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         observer.observe(card);
 
-        // Add hover sound effect simulation
+        // Add hover effects
         card.addEventListener('mouseenter', function() {
             this.style.transform = 'translateY(-10px) scale(1.02)';
             
@@ -76,8 +203,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     ripple.remove();
                 }, 600);
                 
-                // Simulate course selection (for demo purposes)
-                console.log(`Course selected: ${card.querySelector('.course-title').textContent}`);
+                // Log course selection
+                const courseId = card.getAttribute('data-course-id');
+                const courseTitle = card.querySelector('.course-title').textContent;
+                console.log(`Course selected: ${courseTitle} (ID: ${courseId})`);
             });
         }
     });
@@ -98,19 +227,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Course level filtering (basic implementation)
-    function filterCourses(level) {
-        courseCards.forEach(card => {
-            const cardLevel = card.getAttribute('data-level');
-            if (level === 'all' || cardLevel === level) {
-                card.style.display = 'block';
-                card.style.animation = 'cardSlideUp 0.5s ease-out';
-            } else {
-                card.style.display = 'none';
-            }
+    // Enhanced CTA button interaction
+    const ctaBtn = document.querySelector('.cta-btn');
+    if (ctaBtn) {
+        ctaBtn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-3px) scale(1.02)';
+        });
+        
+        ctaBtn.addEventListener('mouseleave', function() {
+            this.style.transform = '';
         });
     }
+}
 
+function initializeKeyboardNavigation() {
     // Add keyboard navigation support
     document.addEventListener('keydown', function(e) {
         const focusedElement = document.activeElement;
@@ -125,34 +255,31 @@ document.addEventListener('DOMContentLoaded', function() {
             courseButtons[currentIndex - 1].focus();
         }
     });
+}
 
-    // Enhanced CTA button interaction
-    const ctaBtn = document.querySelector('.cta-btn');
-    if (ctaBtn) {
-        ctaBtn.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-3px) scale(1.02)';
-        });
-        
-        ctaBtn.addEventListener('mouseleave', function() {
-            this.style.transform = '';
-        });
-    }
-
-    // Console welcome message
-    console.log('🎓 Welcome to IQA Courses Page!');
-    console.log('📚 Choose your learning path and start your Quranic Arabic journey!');
-    
-    // Add subtle parallax effect to background
-    window.addEventListener('scroll', function() {
-        const scrolled = window.pageYOffset;
-        const rate = scrolled * -0.5;
-        document.body.style.backgroundPosition = `0 ${rate}px`;
+// Course level filtering
+function filterCourses(level) {
+    const courseCards = document.querySelectorAll('.course-card');
+    courseCards.forEach(card => {
+        const cardLevel = card.getAttribute('data-level');
+        if (level === 'all' || cardLevel === level) {
+            card.style.display = 'block';
+            card.style.animation = 'cardSlideUp 0.5s ease-out';
+        } else {
+            card.style.display = 'none';
+        }
     });
-});
+}
 
-// Utility function for future course progress tracking
-function updateCourseProgress(courseLevel, progress) {
-    const courseCard = document.querySelector(`[data-level="${courseLevel}"]`);
+// Utility functions
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function updateCourseProgress(courseId, progress) {
+    const courseCard = document.querySelector(`[data-course-id="${courseId}"]`);
     if (courseCard) {
         const progressBar = courseCard.querySelector('.progress-fill');
         const progressText = courseCard.querySelector('.progress-text');
@@ -164,10 +291,9 @@ function updateCourseProgress(courseLevel, progress) {
     }
 }
 
-// Utility function for adding course completion badges
-function addCompletionBadge(courseLevel) {
-    const courseCard = document.querySelector(`[data-level="${courseLevel}"]`);
-    if (courseCard) {
+function addCompletionBadge(courseId) {
+    const courseCard = document.querySelector(`[data-course-id="${courseId}"]`);
+    if (courseCard && !courseCard.querySelector('.completion-badge')) {
         const badge = document.createElement('div');
         badge.className = 'completion-badge';
         badge.innerHTML = '✓ Completed';
@@ -182,6 +308,12 @@ function addCompletionBadge(courseLevel) {
             font-size: 0.8rem;
             font-weight: 600;
         `;
+        courseCard.style.position = 'relative';
         courseCard.appendChild(badge);
     }
 }
+
+// Console welcome message
+console.log('🎓 Welcome to IQA Courses Page!');
+console.log('📚 Courses loaded from Supabase database');
+console.log('🔗 Supabase connected:', SUPABASE_URL);

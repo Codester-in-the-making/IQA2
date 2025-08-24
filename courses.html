@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <!-- Navigation Header -->
@@ -38,98 +39,7 @@
 
             <!-- Courses Grid -->
             <div class="courses-grid">
-                <!-- Beginner Course Card -->
-                <div class="course-card" data-level="beginner">
-                    <div class="course-icon beginner-plant">🌱</div>
-                    <h3 class="course-title">Beginner Quranic Arabic</h3>
-                    <p class="course-description">
-                        Master the Arabic alphabet, basic grammar rules, and essential Quranic vocabulary. 
-                        Perfect for those starting their journey in understanding the Quran.
-                    </p>
-                    <div class="course-stats">
-                        <div class="stat-item">
-                            <span class="stat-icon">📚</span>
-                            <span class="stat-text">12 Lessons</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-icon">⏱️</span>
-                            <span class="stat-text">4-6 weeks</span>
-                        </div>
-                    </div>
-                    <div class="progress-section">
-                        <div class="progress-label">Your Progress</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 0%"></div>
-                        </div>
-                        <div class="progress-text">0% Complete</div>
-                    </div>
-                    <a href="course-detail.html?level=beginner" class="course-btn">
-                        <span class="btn-text">Start Course</span>
-                        <span class="btn-arrow">→</span>
-                    </a>
-                </div>
-
-                <!-- Intermediate Course Card -->
-                <div class="course-card" data-level="intermediate">
-                    <div class="course-icon intermediate-plant">🌿</div>
-                    <h3 class="course-title">Intermediate Quranic Arabic</h3>
-                    <p class="course-description">
-                        Advance your understanding with verb conjugations, sentence structure, and deeper 
-                        grammatical concepts. Build fluency in reading Quranic text.
-                    </p>
-                    <div class="course-stats">
-                        <div class="stat-item">
-                            <span class="stat-icon">📚</span>
-                            <span class="stat-text">16 Lessons</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-icon">⏱️</span>
-                            <span class="stat-text">6-8 weeks</span>
-                        </div>
-                    </div>
-                    <div class="progress-section">
-                        <div class="progress-label">Your Progress</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 0%"></div>
-                        </div>
-                        <div class="progress-text">0% Complete</div>
-                    </div>
-                    <a href="course-detail.html?level=intermediate" class="course-btn">
-                        <span class="btn-text">Start Course</span>
-                        <span class="btn-arrow">→</span>
-                    </a>
-                </div>
-
-                <!-- Advanced Course Card -->
-                <div class="course-card" data-level="advanced">
-                    <div class="course-icon advanced-plant">🌳</div>
-                    <h3 class="course-title">Advanced Quranic Arabic</h3>
-                    <p class="course-description">
-                        Deep dive into complex grammar, rhetoric, and classical Arabic texts. 
-                        Achieve mastery in understanding intricate Quranic expressions and meanings.
-                    </p>
-                    <div class="course-stats">
-                        <div class="stat-item">
-                            <span class="stat-icon">📚</span>
-                            <span class="stat-text">20 Lessons</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-icon">⏱️</span>
-                            <span class="stat-text">8-12 weeks</span>
-                        </div>
-                    </div>
-                    <div class="progress-section">
-                        <div class="progress-label">Your Progress</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 0%"></div>
-                        </div>
-                        <div class="progress-text">0% Complete</div>
-                    </div>
-                    <a href="course-detail.html?level=advanced" class="course-btn">
-                        <span class="btn-text">Start Course</span>
-                        <span class="btn-arrow">→</span>
-                    </a>
-                </div>
+                <!-- Courses will be loaded dynamically from Supabase -->
             </div>
 
             <!-- Call to Action Section -->

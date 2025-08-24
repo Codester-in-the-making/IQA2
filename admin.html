@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - IQA Interactive Quranic Arabic</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h1><a href="home.html">IQA</a></h1>
+                <span class="nav-subtitle">INTERACTIVE QURANIC ARABIC</span>
+            </div>
+            <div class="nav-links">
+                <a href="courses.html" class="nav-link">Courses</a>
+                <a href="admin.html" class="nav-link active">Admin</a>
+                <a href="about.html" class="nav-link">About Us</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <div class="admin-container">
+            <!-- Header Section -->
+            <div class="admin-header">
+                <div class="ornament-top">✦</div>
+                <h1 class="page-title">Course Management</h1>
+                <div class="title-underline"></div>
+                <p class="page-subtitle">Create and manage courses for the IQA learning platform</p>
+            </div>
+
+            <!-- Course Creation Form -->
+            <div class="form-section">
+                <h2 class="section-title">Create New Course</h2>
+                <form id="courseForm" class="course-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="courseTitle" class="form-label">Course Title</label>
+                            <input type="text" id="courseTitle" name="title" class="form-input" placeholder="e.g., Beginner Quranic Arabic" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="courseLevel" class="form-label">Course Level</label>
+                            <select id="courseLevel" name="level" class="form-select" required>
+                                <option value="">Select Level</option>
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="lessonCount" class="form-label">Number of Lessons</label>
+                            <input type="number" id="lessonCount" name="lesson_count" class="form-input" min="1" max="50" placeholder="12" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="duration" class="form-label">Duration</label>
+                            <input type="text" id="duration" name="duration_weeks" class="form-input" placeholder="e.g., 4-6 weeks" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="courseDescription" class="form-label">Course Description</label>
+                        <textarea id="courseDescription" name="description" class="form-textarea" rows="4" 
+                                  placeholder="Provide a detailed description of what students will learn in this course..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="isPublished" name="is_published" class="form-checkbox">
+                            <span class="checkmark"></span>
+                            Publish course immediately (uncheck to keep as draft)
+                        </label>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" id="resetForm" class="btn-secondary">Reset Form</button>
+                        <button type="submit" id="submitCourse" class="btn-primary">
+                            <span class="btn-text">Create Course</span>
+                            <span class="btn-arrow">→</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Existing Courses Section -->
+            <div class="courses-section">
+                <h2 class="section-title">Existing Courses</h2>
+                <div id="coursesList" class="courses-list">
+                    <!-- Courses will be loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Loading and Success/Error Messages -->
+            <div id="loadingMessage" class="message loading-message" style="display: none;">
+                <span class="loading-spinner">⟳</span>
+                <span>Processing...</span>
+            </div>
+            
+            <div id="successMessage" class="message success-message" style="display: none;">
+                <span class="message-icon">✓</span>
+                <span class="message-text"></span>
+            </div>
+            
+            <div id="errorMessage" class="message error-message" style="display: none;">
+                <span class="message-icon">⚠</span>
+                <span class="message-text"></span>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin.js"></script>
+</body>
+</html>
