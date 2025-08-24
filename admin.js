@@ -522,6 +522,7 @@ function parseVocabularyContent(content) {
     const lines = content.split('\n').filter(line => line.trim());
     const vocabularyData = [];
     
+    // Parse pairs: Arabic line followed by English line
     for (let i = 0; i < lines.length; i += 2) {
         const arabic = lines[i] ? lines[i].trim() : '';
         const english = lines[i + 1] ? lines[i + 1].trim() : '';

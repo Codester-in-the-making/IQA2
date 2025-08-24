@@ -336,7 +336,7 @@ function renderVocabularyContent(content) {
                 <p>📚 <em>Vocabulary items for this lesson are being prepared.</em></p>
                 <div class="sample-vocab-format">
                     <div class="vocab-note">
-                        <small>Format: Arabic term | Pronunciation | English meaning</small>
+                        <small>Format: Arabic term | English meaning</small>
                     </div>
                 </div>
             </div>
@@ -344,6 +344,7 @@ function renderVocabularyContent(content) {
     }
     
     // Parse vocabulary content into table format
+    // Content is stored as alternating lines: Arabic, English, Arabic, English...
     const lines = content.split('\n').filter(line => line.trim());
     
     if (lines.length === 0) {
@@ -351,68 +352,26 @@ function renderVocabularyContent(content) {
     }
     
     let tableRows = '';
-    let currentArabic = '';
-    let currentEnglish = '';
     
-    for (const line of lines) {
-        const trimmed = line.trim();
+    // Process lines in pairs (Arabic, English)
+    for (let i = 0; i < lines.length; i += 2) {
+        const arabic = lines[i] ? lines[i].trim() : '';
+        const english = lines[i + 1] ? lines[i + 1].trim() : '';
         
-        // Skip header lines or empty lines
-        if (trimmed.includes(':') || trimmed.toLowerCase().includes('terms') || 
-            trimmed.toLowerCase().includes('vocabulary') || trimmed === '') {
-            continue;
-        }
-        
-        // Check if line contains Arabic text
-        if (/[\u0600-\u06FF]/.test(trimmed)) {
-            // If we have a previous pair, add it to table
-            if (currentArabic && currentEnglish) {
-                tableRows += `
-                    <tr>
-                        <td class="vocab-arabic" dir="rtl">${escapeHtml(currentArabic)}</td>
-                        <td class="vocab-english">${escapeHtml(currentEnglish)}</td>
-                    </tr>
-                `;
-            }
-            currentArabic = trimmed;
-            currentEnglish = '';
-        } else if (currentArabic && !currentEnglish) {
-            // This is likely the English translation
-            currentEnglish = trimmed;
-        } else if (!currentArabic) {
-            // Handle case where English comes first
-            currentEnglish = trimmed;
+        // Only add row if we have at least one value
+        if (arabic || english) {
+            tableRows += `
+                <tr>
+                    <td class="vocab-arabic" dir="rtl">${escapeHtml(arabic)}</td>
+                    <td class="vocab-english">${escapeHtml(english)}</td>
+                </tr>
+            `;
         }
     }
     
-    // Add the last pair if exists
-    if (currentArabic && currentEnglish) {
-        tableRows += `
-            <tr>
-                <td class="vocab-arabic" dir="rtl">${escapeHtml(currentArabic)}</td>
-                <td class="vocab-english">${escapeHtml(currentEnglish)}</td>
-            </tr>
-        `;
-    }
-    
-    // If no proper pairs found, display as simple list
+    // If no valid pairs found, show placeholder
     if (!tableRows) {
-        return lines.map(line => {
-            const trimmed = line.trim();
-            if (/[\u0600-\u06FF]/.test(trimmed)) {
-                return `
-                    <div class="vocab-item">
-                        <div class="vocab-arabic" dir="rtl">${escapeHtml(trimmed)}</div>
-                    </div>
-                `;
-            } else {
-                return `
-                    <div class="vocab-item">
-                        <div class="vocab-english">${escapeHtml(trimmed)}</div>
-                    </div>
-                `;
-            }
-        }).join('');
+        return renderVocabularyContent(''); // Use placeholder
     }
     
     return `
