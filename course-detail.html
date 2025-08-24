@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Details - IQA Interactive Quranic Arabic</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h1><a href="home.html">IQA</a></h1>
+                <span class="nav-subtitle">INTERACTIVE QURANIC ARABIC</span>
+            </div>
+            <div class="nav-links">
+                <a href="courses.html" class="nav-link">Courses</a>
+                <a href="admin.html" class="nav-link">Admin</a>
+                <a href="about.html" class="nav-link">About Us</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="course-detail-main">
+        <div class="course-detail-container">
+            <!-- Back Navigation -->
+            <div class="back-navigation">
+                <a href="courses.html" class="back-btn">
+                    <span class="back-arrow">←</span>
+                    <span class="back-text">Back to Courses</span>
+                </a>
+            </div>
+
+            <!-- Course Header -->
+            <div class="course-detail-header">
+                <div class="course-level-badge" id="courseLevelBadge">Beginner</div>
+                <h1 class="course-detail-title" id="courseTitle">Loading Course...</h1>
+                <div class="title-underline"></div>
+                <p class="course-detail-description" id="courseDescription">
+                    Please wait while we load the course details...
+                </p>
+                
+                <!-- Course Stats -->
+                <div class="course-detail-stats">
+                    <div class="stat-item">
+                        <span class="stat-icon">📚</span>
+                        <span class="stat-label">Lessons</span>
+                        <span class="stat-value" id="lessonCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">⏱️</span>
+                        <span class="stat-label">Duration</span>
+                        <span class="stat-value" id="courseDuration">0 weeks</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">📊</span>
+                        <span class="stat-label">Progress</span>
+                        <span class="stat-value" id="courseProgress">0%</span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="course-progress-section">
+                    <div class="progress-label">Course Progress</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <span class="progress-percentage" id="progressPercentage">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lessons Section -->
+            <div class="lessons-section">
+                <div class="section-header">
+                    <h2 class="section-title">Course Lessons</h2>
+                    <div class="lesson-filter">
+                        <button class="filter-btn active" data-filter="all">All Lessons</button>
+                        <button class="filter-btn" data-filter="completed">Completed</button>
+                        <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+                    </div>
+                </div>
+
+                <!-- Lessons List -->
+                <div class="lessons-list" id="lessonsList">
+                    <!-- Lessons will be loaded dynamically -->
+                    <div class="loading-lessons">
+                        <div class="loading-spinner">⟳</div>
+                        <p>Loading lessons...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Actions -->
+            <div class="course-actions">
+                <button class="btn-action start-course" id="startCourseBtn">
+                    <span class="btn-text">Start First Lesson</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+                <button class="btn-action continue-course" id="continueCourseBtn" style="display: none;">
+                    <span class="btn-text">Continue Learning</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading and Error Messages -->
+    <div id="loadingMessage" class="message loading-message" style="display: none;">
+        <span class="loading-spinner">⟳</span>
+        <span>Loading course details...</span>
+    </div>
+    
+    <div id="errorMessage" class="message error-message" style="display: none;">
+        <span class="message-icon">⚠</span>
+        <span class="message-text">Failed to load course details. Please try again.</span>
+        <button onclick="location.reload()" class="retry-btn">Retry</button>
+    </div>
+
+    <script src="course-detail.js"></script>
+</body>
+</html>

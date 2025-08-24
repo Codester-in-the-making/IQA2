@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson - IQA Interactive Quranic Arabic</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h1><a href="home.html">IQA</a></h1>
+                <span class="nav-subtitle">INTERACTIVE QURANIC ARABIC</span>
+            </div>
+            <div class="nav-links">
+                <a href="courses.html" class="nav-link">Courses</a>
+                <a href="admin.html" class="nav-link">Admin</a>
+                <a href="about.html" class="nav-link">About Us</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="lesson-main">
+        <div class="lesson-container">
+            <!-- Lesson Header -->
+            <div class="lesson-header">
+                <!-- Back Navigation -->
+                <div class="lesson-navigation">
+                    <button class="nav-btn back-btn" id="backToCourse">
+                        <span class="nav-arrow">←</span>
+                        <span class="nav-text">Back to Course</span>
+                    </button>
+                    
+                    <div class="lesson-progress-mini">
+                        <span class="lesson-number" id="lessonNumber">Lesson 1</span>
+                        <div class="progress-dots" id="progressDots">
+                            <!-- Progress dots will be generated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lesson Title Section -->
+                <div class="lesson-title-section">
+                    <div class="lesson-meta">
+                        <span class="course-title" id="courseTitle">Loading...</span>
+                        <span class="lesson-type" id="lessonType">Content</span>
+                        <span class="lesson-duration" id="lessonDuration">15 min</span>
+                    </div>
+                    <h1 class="lesson-title" id="lessonTitle">Loading Lesson...</h1>
+                    <div class="title-underline"></div>
+                </div>
+
+                <!-- Lesson Actions -->
+                <div class="lesson-actions-header">
+                    <button class="action-btn bookmark-btn" id="bookmarkBtn">
+                        <span class="action-icon">🔖</span>
+                        <span class="action-text">Bookmark</span>
+                    </button>
+                    <button class="action-btn notes-btn" id="notesBtn">
+                        <span class="action-icon">📝</span>
+                        <span class="action-text">Notes</span>
+                    </button>
+                    <div class="lesson-progress-indicator">
+                        <div class="progress-circle" id="progressCircle">
+                            <span class="progress-percent" id="progressPercent">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson Content Area -->
+            <div class="lesson-content-area">
+                <!-- Loading State -->
+                <div class="lesson-loading" id="lessonLoading">
+                    <div class="loading-spinner">⟳</div>
+                    <p>Loading lesson content...</p>
+                </div>
+
+                <!-- Lesson Materials Container -->
+                <div class="lesson-materials" id="lessonMaterials" style="display: none;">
+                    <!-- Materials will be loaded dynamically -->
+                </div>
+
+                <!-- Lesson Navigation Footer -->
+                <div class="lesson-navigation-footer" id="lessonNavFooter" style="display: none;">
+                    <button class="nav-btn prev-lesson" id="prevLessonBtn" disabled>
+                        <span class="nav-arrow">←</span>
+                        <span class="nav-text">Previous Lesson</span>
+                    </button>
+                    
+                    <div class="lesson-actions-center">
+                        <button class="action-btn complete-lesson" id="completeLessonBtn">
+                            <span class="action-icon">✓</span>
+                            <span class="action-text">Mark Complete</span>
+                        </button>
+                        <button class="action-btn restart-lesson" id="restartLessonBtn">
+                            <span class="action-icon">↻</span>
+                            <span class="action-text">Restart</span>
+                        </button>
+                    </div>
+                    
+                    <button class="nav-btn next-lesson" id="nextLessonBtn">
+                        <span class="nav-text">Next Lesson</span>
+                        <span class="nav-arrow">→</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar for Notes (Hidden by default) -->
+        <div class="lesson-sidebar" id="lessonSidebar">
+            <div class="sidebar-header">
+                <h3>Lesson Notes</h3>
+                <button class="close-sidebar" id="closeSidebar">×</button>
+            </div>
+            <div class="sidebar-content">
+                <textarea class="notes-textarea" id="notesTextarea" placeholder="Add your notes here..."></textarea>
+                <div class="sidebar-actions">
+                    <button class="btn-secondary" id="clearNotes">Clear</button>
+                    <button class="btn-primary" id="saveNotes">Save Notes</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Error Message -->
+    <div id="errorMessage" class="message error-message" style="display: none;">
+        <span class="message-icon">⚠</span>
+        <span class="message-text">Failed to load lesson. Please try again.</span>
+        <button onclick="location.reload()" class="retry-btn">Retry</button>
+    </div>
+
+    <!-- Success Message -->
+    <div id="successMessage" class="message success-message" style="display: none;">
+        <span class="message-icon">✓</span>
+        <span class="message-text">Lesson completed successfully!</span>
+    </div>
+
+    <script src="lesson.js"></script>
+</body>
+</html>

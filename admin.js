@@ -8,6 +8,10 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // DOM Elements
 let courseForm, coursesList, loadingMessage, successMessage, errorMessage;
+let lessonForm, lessonManagementSection, courseManagementSection, selectedCourseInfo;
+let existingLessons, materialBuilder, materialsList;
+let currentSelectedCourse = null;
+let lessonMaterials = [];
 
 // Initialize the admin dashboard
 document.addEventListener('DOMContentLoaded', function() {
@@ -17,6 +21,15 @@ document.addEventListener('DOMContentLoaded', function() {
     loadingMessage = document.getElementById('loadingMessage');
     successMessage = document.getElementById('successMessage');
     errorMessage = document.getElementById('errorMessage');
+    
+    // Lesson management elements
+    lessonForm = document.getElementById('lessonForm');
+    lessonManagementSection = document.getElementById('lessonManagementSection');
+    courseManagementSection = document.getElementById('courseManagementSection');
+    selectedCourseInfo = document.getElementById('selectedCourseInfo');
+    existingLessons = document.getElementById('existingLessons');
+    materialBuilder = document.getElementById('materialBuilder');
+    materialsList = document.getElementById('materialsList');
 
     // Set up event listeners
     setupEventListeners();
@@ -31,6 +44,9 @@ function setupEventListeners() {
 
     // Reset form button
     document.getElementById('resetForm').addEventListener('click', resetForm);
+    
+    // Lesson management event listeners
+    setupLessonEventListeners();
 }
 
 async function handleCourseSubmission(e) {
@@ -162,6 +178,9 @@ function displayCourses(courses) {
                 <p>${escapeHtml(course.description)}</p>
             </div>
             <div class="course-actions">
+                <button class="btn-action manage-lessons" onclick="manageLessons('${course.id}', '${escapeHtml(course.title)}')">
+                    <span>Manage Lessons</span>
+                </button>
                 <button class="btn-action edit" onclick="editCourse('${course.id}')">
                     <span>Edit</span>
                 </button>
@@ -294,3 +313,422 @@ function formatDate(dateString) {
 // Console message for debugging
 console.log('🔧 Admin Dashboard loaded successfully');
 console.log('📊 Supabase connected:', SUPABASE_URL);
+
+// ===========================================
+// LESSON MANAGEMENT FUNCTIONALITY
+// ===========================================
+
+function setupLessonEventListeners() {
+    // Back to courses button
+    const backToCoursesBtn = document.getElementById('backToCoursesBtn');
+    if (backToCoursesBtn) {
+        backToCoursesBtn.addEventListener('click', showCourseManagement);
+    }
+    
+    // Lesson form submission
+    if (lessonForm) {
+        lessonForm.addEventListener('submit', handleLessonSubmission);
+    }
+    
+    // Reset lesson form
+    const resetLessonForm = document.getElementById('resetLessonForm');
+    if (resetLessonForm) {
+        resetLessonForm.addEventListener('click', resetLessonForm);
+    }
+    
+    // Material builder buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('material-btn')) {
+            const materialType = e.target.getAttribute('data-type');
+            addMaterial(materialType);
+        }
+    });
+}
+
+async function manageLessons(courseId, courseTitle) {
+    currentSelectedCourse = { id: courseId, title: courseTitle };
+    
+    // Hide course management, show lesson management
+    showLessonManagement();
+    
+    // Update header
+    document.getElementById('mainPageTitle').textContent = 'Lesson Management';
+    document.getElementById('mainPageSubtitle').textContent = `Managing lessons for: ${courseTitle}`;
+    
+    // Display selected course info
+    displaySelectedCourseInfo();
+    
+    // Load existing lessons
+    await loadCourseLessons(courseId);
+}
+
+function showLessonManagement() {
+    courseManagementSection.style.display = 'none';
+    document.querySelector('.courses-section').style.display = 'none';
+    lessonManagementSection.style.display = 'block';
+}
+
+function showCourseManagement() {
+    lessonManagementSection.style.display = 'none';
+    courseManagementSection.style.display = 'block';
+    document.querySelector('.courses-section').style.display = 'block';
+    
+    // Reset header
+    document.getElementById('mainPageTitle').textContent = 'Course Management';
+    document.getElementById('mainPageSubtitle').textContent = 'Create and manage courses for the IQA learning platform';
+    
+    // Clear current selection
+    currentSelectedCourse = null;
+    lessonMaterials = [];
+}
+
+function displaySelectedCourseInfo() {
+    if (!currentSelectedCourse) return;
+    
+    selectedCourseInfo.innerHTML = `
+        <div class="selected-course-card">
+            <h3>Selected Course: ${escapeHtml(currentSelectedCourse.title)}</h3>
+            <p>Course ID: ${currentSelectedCourse.id}</p>
+        </div>
+    `;
+}
+
+async function loadCourseLessons(courseId) {
+    showLoading(true);
+    
+    try {
+        const { data: lessons, error } = await supabase
+            .from('lessons')
+            .select(`
+                *,
+                lesson_materials (count)
+            `)
+            .eq('course_id', courseId)
+            .order('lesson_order', { ascending: true });
+            
+        if (error) {
+            throw error;
+        }
+        
+        displayExistingLessons(lessons);
+        
+        // Update lesson order field to next available
+        const nextOrder = lessons.length > 0 ? Math.max(...lessons.map(l => l.lesson_order)) + 1 : 1;
+        document.getElementById('lessonOrder').value = nextOrder;
+        
+    } catch (error) {
+        console.error('Error loading lessons:', error);
+        showErrorMessage('Failed to load lessons.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displayExistingLessons(lessons) {
+    if (!lessons || lessons.length === 0) {
+        existingLessons.innerHTML = `
+            <div class="no-lessons">
+                <p>No lessons created yet. Create your first lesson above!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    existingLessons.innerHTML = lessons.map(lesson => `
+        <div class="lesson-item" data-lesson-id="${lesson.id}">
+            <div class="lesson-header">
+                <div class="lesson-title-section">
+                    <h4 class="lesson-title">Lesson ${lesson.lesson_order}: ${escapeHtml(lesson.title)}</h4>
+                    <div class="lesson-meta">
+                        <span class="lesson-type ${lesson.lesson_type}">${capitalizeFirst(lesson.lesson_type)}</span>
+                        <span class="lesson-duration">${lesson.duration_minutes} min</span>
+                        <span class="material-count">${lesson.lesson_materials ? lesson.lesson_materials.length : 0} materials</span>
+                    </div>
+                </div>
+                <div class="lesson-status">
+                    <span class="status-badge ${lesson.is_published ? 'published' : 'draft'}">
+                        ${lesson.is_published ? 'Published' : 'Draft'}
+                    </span>
+                </div>
+            </div>
+            <div class="lesson-content-preview">
+                <p>${escapeHtml(lesson.content ? lesson.content.substring(0, 150) + '...' : 'No content')}</p>
+            </div>
+            <div class="lesson-actions">
+                <button class="btn-action edit-lesson" onclick="editLesson('${lesson.id}')">
+                    <span>Edit</span>
+                </button>
+                <button class="btn-action manage-materials" onclick="manageMaterials('${lesson.id}')">
+                    <span>Materials</span>
+                </button>
+                <button class="btn-action ${lesson.is_published ? 'unpublish' : 'publish'}" 
+                        onclick="toggleLessonPublishStatus('${lesson.id}', ${!lesson.is_published})">
+                    <span>${lesson.is_published ? 'Unpublish' : 'Publish'}</span>
+                </button>
+                <button class="btn-action delete-lesson" onclick="deleteLesson('${lesson.id}', '${escapeHtml(lesson.title)}')">
+                    <span>Delete</span>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function handleLessonSubmission(e) {
+    e.preventDefault();
+    
+    if (!currentSelectedCourse) {
+        showErrorMessage('No course selected.');
+        return;
+    }
+    
+    showLoading(true);
+    hideMessages();
+    
+    try {
+        // Get form data
+        const formData = new FormData(lessonForm);
+        const lessonData = {
+            course_id: currentSelectedCourse.id,
+            title: formData.get('title').trim(),
+            content: formData.get('content').trim(),
+            lesson_order: parseInt(formData.get('lesson_order')),
+            lesson_type: formData.get('lesson_type'),
+            duration_minutes: parseInt(formData.get('duration_minutes')),
+            is_published: formData.get('is_published') === 'on'
+        };
+        
+        // Validate data
+        if (!validateLessonData(lessonData)) {
+            return;
+        }
+        
+        // Insert lesson into Supabase
+        const { data, error } = await supabase
+            .from('lessons')
+            .insert([lessonData])
+            .select();
+            
+        if (error) {
+            throw error;
+        }
+        
+        // Create materials if any
+        if (lessonMaterials.length > 0) {
+            await createLessonMaterials(data[0].id);
+        }
+        
+        // Success
+        showSuccessMessage('Lesson created successfully!');
+        resetLessonFormData();
+        await loadCourseLessons(currentSelectedCourse.id);
+        
+    } catch (error) {
+        console.error('Error creating lesson:', error);
+        showErrorMessage('Failed to create lesson. Please try again.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function validateLessonData(data) {
+    if (!data.title || data.title.length < 3) {
+        showErrorMessage('Lesson title must be at least 3 characters long.');
+        return false;
+    }
+    
+    if (!data.content || data.content.length < 10) {
+        showErrorMessage('Lesson content must be at least 10 characters long.');
+        return false;
+    }
+    
+    if (!data.lesson_order || data.lesson_order < 1) {
+        showErrorMessage('Lesson order must be a positive number.');
+        return false;
+    }
+    
+    if (!data.duration_minutes || data.duration_minutes < 5) {
+        showErrorMessage('Lesson duration must be at least 5 minutes.');
+        return false;
+    }
+    
+    return true;
+}
+
+async function createLessonMaterials(lessonId) {
+    for (const material of lessonMaterials) {
+        const materialData = {
+            lesson_id: lessonId,
+            material_type: material.type,
+            title: material.title,
+            content: material.content,
+            material_order: material.order,
+            metadata: material.metadata || {}
+        };
+        
+        const { error } = await supabase
+            .from('lesson_materials')
+            .insert([materialData]);
+            
+        if (error) {
+            console.error('Error creating material:', error);
+        }
+    }
+}
+
+function addMaterial(materialType) {
+    const materialOrder = lessonMaterials.length + 1;
+    const materialId = `material_${Date.now()}`;
+    
+    const material = {
+        id: materialId,
+        type: materialType,
+        title: `${capitalizeFirst(materialType)} ${materialOrder}`,
+        content: '',
+        order: materialOrder,
+        metadata: {}
+    };
+    
+    lessonMaterials.push(material);
+    renderMaterialBuilder();
+}
+
+function renderMaterialBuilder() {
+    if (lessonMaterials.length === 0) {
+        materialsList.innerHTML = '<p class="no-materials">No materials added yet. Use the buttons above to add content.</p>';
+        return;
+    }
+    
+    materialsList.innerHTML = lessonMaterials.map((material, index) => `
+        <div class="material-editor" data-material-id="${material.id}">
+            <div class="material-header">
+                <h4>${capitalizeFirst(material.type)} - ${material.title}</h4>
+                <div class="material-controls">
+                    <button type="button" class="btn-small" onclick="moveMaterial(${index}, 'up')" ${index === 0 ? 'disabled' : ''}>↑</button>
+                    <button type="button" class="btn-small" onclick="moveMaterial(${index}, 'down')" ${index === lessonMaterials.length - 1 ? 'disabled' : ''}>↓</button>
+                    <button type="button" class="btn-small delete" onclick="removeMaterial(${index})">×</button>
+                </div>
+            </div>
+            <div class="material-inputs">
+                <input type="text" class="material-title-input" value="${material.title}" 
+                       onchange="updateMaterial(${index}, 'title', this.value)" placeholder="Material title...">
+                <textarea class="material-content-input" rows="3" 
+                          onchange="updateMaterial(${index}, 'content', this.value)" 
+                          placeholder="${getMaterialPlaceholder(material.type)}">${material.content}</textarea>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getMaterialPlaceholder(materialType) {
+    switch (materialType) {
+        case 'text':
+            return 'Enter text content here...';
+        case 'vocabulary':
+            return 'Enter vocabulary items (Arabic - English pairs)...';
+        case 'quiz_question':
+            return 'Enter quiz question and answer options...';
+        default:
+            return 'Enter content...';
+    }
+}
+
+function updateMaterial(index, field, value) {
+    if (lessonMaterials[index]) {
+        lessonMaterials[index][field] = value;
+    }
+}
+
+function moveMaterial(index, direction) {
+    if (direction === 'up' && index > 0) {
+        [lessonMaterials[index], lessonMaterials[index - 1]] = [lessonMaterials[index - 1], lessonMaterials[index]];
+    } else if (direction === 'down' && index < lessonMaterials.length - 1) {
+        [lessonMaterials[index], lessonMaterials[index + 1]] = [lessonMaterials[index + 1], lessonMaterials[index]];
+    }
+    
+    // Update orders
+    lessonMaterials.forEach((material, i) => {
+        material.order = i + 1;
+    });
+    
+    renderMaterialBuilder();
+}
+
+function removeMaterial(index) {
+    lessonMaterials.splice(index, 1);
+    
+    // Update orders
+    lessonMaterials.forEach((material, i) => {
+        material.order = i + 1;
+    });
+    
+    renderMaterialBuilder();
+}
+
+function resetLessonFormData() {
+    lessonForm.reset();
+    lessonMaterials = [];
+    renderMaterialBuilder();
+    hideMessages();
+}
+
+async function toggleLessonPublishStatus(lessonId, isPublished) {
+    showLoading(true);
+    
+    try {
+        const { error } = await supabase
+            .from('lessons')
+            .update({ is_published: isPublished })
+            .eq('id', lessonId);
+            
+        if (error) {
+            throw error;
+        }
+        
+        showSuccessMessage(`Lesson ${isPublished ? 'published' : 'unpublished'} successfully!`);
+        await loadCourseLessons(currentSelectedCourse.id);
+        
+    } catch (error) {
+        console.error('Error updating lesson status:', error);
+        showErrorMessage('Failed to update lesson status.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function deleteLesson(lessonId, lessonTitle) {
+    const confirmed = confirm(`Are you sure you want to delete "${lessonTitle}"?\n\nThis will also delete all associated materials. This action cannot be undone.`);
+    
+    if (!confirmed) return;
+    
+    showLoading(true);
+    
+    try {
+        const { error } = await supabase
+            .from('lessons')
+            .delete()
+            .eq('id', lessonId);
+            
+        if (error) {
+            throw error;
+        }
+        
+        showSuccessMessage('Lesson deleted successfully!');
+        await loadCourseLessons(currentSelectedCourse.id);
+        
+    } catch (error) {
+        console.error('Error deleting lesson:', error);
+        showErrorMessage('Failed to delete lesson.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function editLesson(lessonId) {
+    // For now, show an alert. In a full implementation, this would populate the form
+    alert('Edit functionality will be enhanced in future updates. For now, you can delete and recreate the lesson.');
+}
+
+function manageMaterials(lessonId) {
+    // For now, show an alert. In a full implementation, this would open a material editor
+    alert('Material management interface will be enhanced in future updates.');
+}

@@ -32,13 +32,13 @@
             <!-- Header Section -->
             <div class="admin-header">
                 <div class="ornament-top">✦</div>
-                <h1 class="page-title">Course Management</h1>
+                <h1 class="page-title" id="mainPageTitle">Course Management</h1>
                 <div class="title-underline"></div>
-                <p class="page-subtitle">Create and manage courses for the IQA learning platform</p>
+                <p class="page-subtitle" id="mainPageSubtitle">Create and manage courses for the IQA learning platform</p>
             </div>
 
             <!-- Course Creation Form -->
-            <div class="form-section">
+            <div class="form-section" id="courseManagementSection">
                 <h2 class="section-title">Create New Course</h2>
                 <form id="courseForm" class="course-form">
                     <div class="form-row">
@@ -97,6 +97,100 @@
                 <h2 class="section-title">Existing Courses</h2>
                 <div id="coursesList" class="courses-list">
                     <!-- Courses will be loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Lesson Management Section -->
+            <div class="lessons-management-section" id="lessonManagementSection" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">Lesson Management</h2>
+                    <button class="btn-secondary" id="backToCoursesBtn">
+                        <span class="btn-arrow">←</span>
+                        <span class="btn-text">Back to Courses</span>
+                    </button>
+                </div>
+                
+                <div class="selected-course-info" id="selectedCourseInfo">
+                    <!-- Selected course info will be displayed here -->
+                </div>
+
+                <!-- Lesson Creation Form -->
+                <div class="form-section lesson-form-section">
+                    <h3 class="subsection-title">Create New Lesson</h3>
+                    <form id="lessonForm" class="lesson-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="lessonTitle" class="form-label">Lesson Title</label>
+                                <input type="text" id="lessonTitle" name="title" class="form-input" placeholder="e.g., Introduction to Arabic Letters" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lessonOrder" class="form-label">Lesson Order</label>
+                                <input type="number" id="lessonOrder" name="lesson_order" class="form-input" min="1" placeholder="1" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="lessonType" class="form-label">Lesson Type</label>
+                                <select id="lessonType" name="lesson_type" class="form-select" required>
+                                    <option value="content">Content</option>
+                                    <option value="quiz">Quiz</option>
+                                    <option value="exercise">Exercise</option>
+                                    <option value="vocabulary">Vocabulary</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="lessonDuration" class="form-label">Duration (minutes)</label>
+                                <input type="number" id="lessonDuration" name="duration_minutes" class="form-input" min="5" max="120" placeholder="15" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="lessonContent" class="form-label">Lesson Content</label>
+                            <textarea id="lessonContent" name="content" class="form-textarea" rows="4" 
+                                      placeholder="Provide the main content for this lesson..." required></textarea>
+                        </div>
+                        
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="lessonPublished" name="is_published" class="form-checkbox">
+                                <span class="checkmark"></span>
+                                Publish lesson immediately
+                            </label>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" id="resetLessonForm" class="btn-secondary">Reset Form</button>
+                            <button type="submit" id="submitLesson" class="btn-primary">
+                                <span class="btn-text">Create Lesson</span>
+                                <span class="btn-arrow">→</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Material Builder Section -->
+                <div class="material-builder-section">
+                    <h3 class="subsection-title">Lesson Materials Builder</h3>
+                    <div class="material-builder" id="materialBuilder">
+                        <div class="material-controls">
+                            <button type="button" class="material-btn" data-type="text">+ Text Content</button>
+                            <button type="button" class="material-btn" data-type="vocabulary">+ Vocabulary</button>
+                            <button type="button" class="material-btn" data-type="image">+ Image</button>
+                            <button type="button" class="material-btn" data-type="quiz_question">+ Quiz Question</button>
+                        </div>
+                        <div class="materials-list" id="materialsList">
+                            <!-- Dynamic materials will be added here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing Lessons for Selected Course -->
+                <div class="existing-lessons-section">
+                    <h3 class="subsection-title">Existing Lessons</h3>
+                    <div id="existingLessons" class="existing-lessons-list">
+                        <!-- Lessons will be loaded dynamically -->
+                    </div>
                 </div>
             </div>
 
