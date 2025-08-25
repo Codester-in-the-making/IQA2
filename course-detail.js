@@ -152,7 +152,6 @@ function displayLessons() {
         const isCompleted = userProgress[lesson.id] === 'completed';
         const isInProgress = userProgress[lesson.id] === 'in_progress';
         const isLocked = index > 0 && !userProgress[courseLessons[index - 1].id];
-        const materialCount = lesson.lesson_materials ? lesson.lesson_materials.length : 0;
 
         return `
             <div class="lesson-item ${isCompleted ? 'completed' : ''} ${isInProgress ? 'in-progress' : ''} ${isLocked ? 'locked' : ''}" 
@@ -167,14 +166,12 @@ function displayLessons() {
                     <div class="lesson-header">
                         <h3 class="lesson-title">${escapeHtml(lesson.title)}</h3>
                         <div class="lesson-meta">
-                            <span class="lesson-type ${lesson.lesson_type}">${capitalizeFirst(lesson.lesson_type)}</span>
                             <span class="lesson-duration">${lesson.duration_minutes} min</span>
-                            ${materialCount > 0 ? `<span class="material-count">${materialCount} materials</span>` : ''}
                         </div>
                     </div>
                     
                     <div class="lesson-description">
-                        <p>${escapeHtml(lesson.content || 'Click to view lesson content.')}</p>
+                        <p>${escapeHtml(lesson.content && lesson.content !== 'Lesson content is defined by materials' ? lesson.content : 'Click to view lesson content.')}</p>
                     </div>
                     
                     <div class="lesson-progress">

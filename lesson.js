@@ -16,7 +16,7 @@ let userNotes = '';
 let lessonProgress = 0;
 
 // DOM Elements
-let lessonTitle, courseTitle, lessonType, lessonDuration, lessonNumber;
+let lessonTitle, courseTitle, lessonType, lessonDuration, lessonNumber, lessonDescription, lessonDescriptionText;
 let lessonMaterials, lessonLoading, lessonNavFooter, progressDots;
 let backToCourseBtn, prevLessonBtn, nextLessonBtn, completeLessonBtn;
 let notesBtn, lessonSidebar, notesTextarea;
@@ -60,6 +60,8 @@ function getDOMElements() {
     lessonType = document.getElementById('lessonType');
     lessonDuration = document.getElementById('lessonDuration');
     lessonNumber = document.getElementById('lessonNumber');
+    lessonDescription = document.getElementById('lessonDescription');
+    lessonDescriptionText = document.getElementById('lessonDescriptionText');
     lessonMaterials = document.getElementById('lessonMaterials');
     lessonLoading = document.getElementById('lessonLoading');
     lessonNavFooter = document.getElementById('lessonNavFooter');
@@ -156,15 +158,23 @@ function displayLessonHeader() {
 
     // Update header information
     lessonTitle.textContent = currentLesson.title;
-    courseTitle.textContent = ''; // Hide course title
-    lessonType.textContent = ''; // Hide materials count
     lessonDuration.textContent = `${currentLesson.duration_minutes} min`;
     lessonNumber.textContent = `Lesson ${currentLesson.lesson_order}`;
+
+    // Show lesson description if it exists and is not the default placeholder
+    if (currentLesson.content && 
+        currentLesson.content.trim() && 
+        currentLesson.content !== 'Lesson content is defined by materials') {
+        lessonDescriptionText.textContent = currentLesson.content;
+        lessonDescription.style.display = 'block';
+    } else {
+        lessonDescription.style.display = 'none';
+    }
 
     // Update page title
     document.title = `${currentLesson.title} - ${currentCourse.title} - IQA`;
 
-    // Hide the course title and lesson type elements
+    // Hide the course title and lesson type elements completely
     courseTitle.style.display = 'none';
     lessonType.style.display = 'none';
 }
