@@ -729,6 +729,7 @@ function displayExistingLessons(lessons) {
             <div class="lesson-header">
                 <div class="lesson-title-section">
                     <h4 class="lesson-title">Lesson ${lesson.lesson_order}: ${escapeHtml(lesson.title)}</h4>
+                    ${lesson.description && lesson.description.trim() ? `<p class="lesson-description">${escapeHtml(lesson.description.length > 100 ? lesson.description.substring(0, 100) + '...' : lesson.description)}</p>` : ''}
                     <div class="lesson-meta">
                         <span class="lesson-duration">${lesson.duration_minutes} min</span>
                         <span class="material-count">${lesson.lesson_materials ? lesson.lesson_materials.length : 0} materials</span>
@@ -740,8 +741,8 @@ function displayExistingLessons(lessons) {
                     </span>
                 </div>
             </div>
-            <div class="lesson-content-preview">
-                <p>${escapeHtml(lesson.content ? lesson.content.substring(0, 150) + '...' : 'No content')}</p>
+            <div class="lesson-content-preview" style="display: none;">
+                <p>${escapeHtml(lesson.content && lesson.content.trim() && lesson.content !== 'Lesson content is defined by materials' ? lesson.content.substring(0, 150) + '...' : '')}</p>
             </div>
             <div class="lesson-actions">
                 <button class="btn-action preview-lesson" onclick="previewLesson('${lesson.id}')">
@@ -749,9 +750,6 @@ function displayExistingLessons(lessons) {
                 </button>
                 <button class="btn-action edit-lesson" onclick="editLesson('${lesson.id}')">
                     <span>Edit</span>
-                </button>
-                <button class="btn-action manage-materials" onclick="manageMaterials('${lesson.id}')">
-                    <span>Materials</span>
                 </button>
                 <button class="btn-action ${lesson.is_published ? 'unpublish' : 'publish'}" 
                         onclick="toggleLessonPublishStatus('${lesson.id}', ${!lesson.is_published})">
@@ -781,10 +779,11 @@ async function handleLessonSubmission(e) {
         const formData = new FormData(lessonForm);
         const lessonData = {
             title: formData.get('title').trim(),
+            description: formData.get('description').trim(),
             lesson_order: parseInt(formData.get('lesson_order')),
             duration_minutes: parseInt(formData.get('duration_minutes')),
             lesson_type: 'content',
-            content: 'Lesson content is defined by materials',
+            content: '',
             is_published: formData.get('is_published') === 'on'
         };
         
@@ -1295,6 +1294,7 @@ async function editLesson(lessonId) {
 function populateLessonFormForEdit(lesson) {
     // Populate basic lesson form fields
     document.getElementById('lessonTitle').value = lesson.title;
+    document.getElementById('lessonDescription').value = lesson.description || '';
     document.getElementById('lessonOrder').value = lesson.lesson_order;
     document.getElementById('lessonDuration').value = lesson.duration_minutes;
     document.getElementById('lessonPublished').checked = lesson.is_published;
@@ -1509,12 +1509,10 @@ function displayLessonPreview(lesson) {
         previewLessonDuration.textContent = `${lesson.duration_minutes} min`;
     }
     
-    // Show lesson description if it exists and is not the default placeholder
-    if (lesson.content && 
-        lesson.content.trim() && 
-        lesson.content !== 'Lesson content is defined by materials') {
+    // Show lesson description if it exists
+    if (lesson.description && lesson.description.trim()) {
         if (previewLessonDescriptionText) {
-            previewLessonDescriptionText.textContent = lesson.content;
+            previewLessonDescriptionText.textContent = lesson.description;
         }
         if (previewLessonDescription) {
             previewLessonDescription.style.display = 'block';

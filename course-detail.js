@@ -170,8 +170,8 @@ function displayLessons() {
                         </div>
                     </div>
                     
-                    <div class="lesson-description">
-                        <p>${escapeHtml(lesson.content && lesson.content !== 'Lesson content is defined by materials' ? lesson.content : 'Click to view lesson content.')}</p>
+                    <div class="lesson-description" style="${lesson.description && lesson.description.trim() ? '' : 'display: none;'}">
+                        <p>${escapeHtml(lesson.description || '')}</p>
                     </div>
                     
                     <div class="lesson-progress">
@@ -179,7 +179,7 @@ function displayLessons() {
                             <div class="progress-fill" style="width: ${isCompleted ? '100' : isInProgress ? '50' : '0'}%"></div>
                         </div>
                         <span class="progress-text">
-                            ${isCompleted ? 'Completed' : isInProgress ? 'In Progress' : isLocked ? 'Locked' : 'Not Started'}
+                            ${isCompleted ? 'Completed' : isInProgress ? 'In Progress' : isLocked ? 'Locked' : ''}
                         </span>
                     </div>
                 </div>
