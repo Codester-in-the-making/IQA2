@@ -163,24 +163,26 @@ function displayLessons() {
                 </div>
                 
                 <div class="lesson-content">
-                    <div class="lesson-header">
+                    <div class="lesson-title-row">
                         <h3 class="lesson-title">${escapeHtml(lesson.title)}</h3>
                         <div class="lesson-meta">
                             <span class="lesson-duration">${lesson.duration_minutes} min</span>
                         </div>
                     </div>
                     
-                    <div class="lesson-description" style="${lesson.description && lesson.description.trim() ? '' : 'display: none;'}">
-                        <p>${escapeHtml(lesson.description || '')}</p>
-                    </div>
+                    ${lesson.description && lesson.description.trim() ? `
+                        <p class="lesson-description">${escapeHtml(lesson.description)}</p>
+                    ` : ''}
                     
-                    <div class="lesson-progress">
-                        <div class="progress-bar small">
-                            <div class="progress-fill" style="width: ${isCompleted ? '100' : isInProgress ? '50' : '0'}%"></div>
+                    <div class="lesson-progress-row">
+                        <div class="progress-container">
+                            <div class="progress-bar small">
+                                <div class="progress-fill" style="width: ${isCompleted ? '100' : isInProgress ? '50' : '0'}%"></div>
+                            </div>
+                            <span class="progress-text">
+                                ${isCompleted ? 'Completed' : isInProgress ? 'In Progress' : isLocked ? 'Locked' : ''}
+                            </span>
                         </div>
-                        <span class="progress-text">
-                            ${isCompleted ? 'Completed' : isInProgress ? 'In Progress' : isLocked ? 'Locked' : ''}
-                        </span>
                     </div>
                 </div>
                 
