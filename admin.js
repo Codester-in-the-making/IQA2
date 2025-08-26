@@ -744,6 +744,9 @@ function displayExistingLessons(lessons) {
                 <p>${escapeHtml(lesson.content ? lesson.content.substring(0, 150) + '...' : 'No content')}</p>
             </div>
             <div class="lesson-actions">
+                <button class="btn-action preview-lesson" onclick="previewLesson('${lesson.id}')">
+                    <span>👁️ Preview</span>
+                </button>
                 <button class="btn-action edit-lesson" onclick="editLesson('${lesson.id}')">
                     <span>Edit</span>
                 </button>
@@ -1360,3 +1363,427 @@ function cancelLessonEdit() {
 function isEditMode() {
     return currentEditingLesson !== null;
 }
+
+// ===========================================
+// LESSON PREVIEW FUNCTIONALITY
+// ===========================================
+
+// Preview modal elements
+let previewModal = null;
+let previewLessonMaterials = null;
+let previewLessonLoading = null;
+let previewLessonTitle = null;
+let previewCourseTitle = null;
+let previewLessonDuration = null;
+let previewLessonDescription = null;
+let previewLessonDescriptionText = null;
+
+// Initialize preview modal elements when DOM is ready
+function initializePreviewElements() {
+    // Get preview modal elements
+    previewModal = document.getElementById('lessonPreviewModal');
+    previewLessonMaterials = document.getElementById('previewLessonMaterials');
+    previewLessonLoading = document.getElementById('previewLessonLoading');
+    previewLessonTitle = document.getElementById('previewLessonTitle');
+    previewCourseTitle = document.getElementById('previewCourseTitle');
+    previewLessonDuration = document.getElementById('previewLessonDuration');
+    previewLessonDescription = document.getElementById('previewLessonDescription');
+    previewLessonDescriptionText = document.getElementById('previewLessonDescriptionText');
+}
+
+// Call initialization when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Delay initialization to ensure all elements are loaded
+    setTimeout(initializePreviewElements, 100);
+});
+
+async function previewLesson(lessonId) {
+    if (!lessonId) {
+        showErrorMessage('No lesson ID provided for preview.');
+        return;
+    }
+    
+    try {
+        // Initialize preview elements if not already done
+        if (!previewModal) {
+            initializePreviewElements();
+        }
+        
+        // Show the preview modal
+        showPreviewModal();
+        showPreviewLoading(true);
+        
+        // Load lesson data with materials and course info
+        const { data: lesson, error: lessonError } = await supabase
+            .from('lessons')
+            .select(`
+                *,
+                course:courses(*),
+                lesson_materials (*)
+            `)
+            .eq('id', lessonId)
+            .single();
+            
+        if (lessonError) {
+            console.error('Preview lesson query error:', lessonError);
+            throw new Error(`Database error: ${lessonError.message}`);
+        }
+        
+        if (!lesson) {
+            throw new Error('Lesson not found');
+        }
+        
+        // Display the lesson preview
+        displayLessonPreview(lesson);
+        
+    } catch (error) {
+        console.error('Error loading lesson preview:', error);
+        showErrorMessage(`Failed to load lesson preview: ${error.message}`);
+        closeLessonPreview();
+    } finally {
+        showPreviewLoading(false);
+    }
+}
+
+function showPreviewModal() {
+    if (previewModal) {
+        previewModal.style.display = 'flex';
+        // Prevent body scrolling when modal is open
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeLessonPreview() {
+    if (previewModal) {
+        previewModal.style.display = 'none';
+        // Restore body scrolling
+        document.body.style.overflow = 'auto';
+        
+        // Clear preview content
+        clearPreviewContent();
+    }
+}
+
+function showPreviewLoading(show) {
+    if (previewLessonLoading && previewLessonMaterials) {
+        previewLessonLoading.style.display = show ? 'block' : 'none';
+        previewLessonMaterials.style.display = show ? 'none' : 'block';
+    }
+}
+
+function clearPreviewContent() {
+    if (previewLessonMaterials) {
+        previewLessonMaterials.innerHTML = '';
+    }
+    if (previewLessonTitle) {
+        previewLessonTitle.textContent = 'Lesson Title';
+    }
+    if (previewCourseTitle) {
+        previewCourseTitle.textContent = 'Course Name';
+    }
+    if (previewLessonDuration) {
+        previewLessonDuration.textContent = '15 min';
+    }
+    if (previewLessonDescription) {
+        previewLessonDescription.style.display = 'none';
+    }
+}
+
+function displayLessonPreview(lesson) {
+    const course = lesson.course;
+    const materials = lesson.lesson_materials || [];
+    
+    // Sort materials by order
+    materials.sort((a, b) => a.material_order - b.material_order);
+    
+    // Update lesson header information
+    if (previewLessonTitle) {
+        previewLessonTitle.textContent = lesson.title;
+    }
+    
+    if (previewCourseTitle) {
+        previewCourseTitle.textContent = course ? course.title : 'Course';
+    }
+    
+    if (previewLessonDuration) {
+        previewLessonDuration.textContent = `${lesson.duration_minutes} min`;
+    }
+    
+    // Show lesson description if it exists and is not the default placeholder
+    if (lesson.content && 
+        lesson.content.trim() && 
+        lesson.content !== 'Lesson content is defined by materials') {
+        if (previewLessonDescriptionText) {
+            previewLessonDescriptionText.textContent = lesson.content;
+        }
+        if (previewLessonDescription) {
+            previewLessonDescription.style.display = 'block';
+        }
+    } else {
+        if (previewLessonDescription) {
+            previewLessonDescription.style.display = 'none';
+        }
+    }
+    
+    // Display lesson materials
+    displayPreviewMaterials(materials);
+}
+
+function displayPreviewMaterials(materials) {
+    if (!previewLessonMaterials) return;
+    
+    if (!materials || materials.length === 0) {
+        previewLessonMaterials.innerHTML = `
+            <div class="no-materials">
+                <div class="ornament-top">✦</div>
+                <h3>Lesson Content</h3>
+                <div class="sample-content">
+                    <p class="lesson-intro">Welcome to this lesson! This lesson is currently being prepared with interactive materials.</p>
+                    
+                    <div class="content-preview">
+                        <h4>What you'll learn:</h4>
+                        <ul>
+                            <li>🎯 Key Quranic Arabic concepts</li>
+                            <li>📚 Essential vocabulary and grammar</li>
+                            <li>🔤 Reading and comprehension skills</li>
+                            <li>💡 Practical application exercises</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="placeholder-message">
+                        <p><em>Interactive materials and exercises are being added to this lesson. Please check back soon for the complete learning experience!</em></p>
+                    </div>
+                </div>
+                <div class="ornament-bottom">✦</div>
+            </div>
+        `;
+    } else {
+        previewLessonMaterials.innerHTML = materials.map((material, index) => {
+            return renderPreviewMaterial(material, index);
+        }).join('');
+    }
+}
+
+// This function reuses the exact same logic as the user-side lesson.js renderMaterial function
+function renderPreviewMaterial(material, index) {
+    switch (material.material_type) {
+        case 'text':
+            const textContent = material.content && material.content.trim() ? 
+                formatPreviewTextContent(material.content) : 
+                `<p class="placeholder-text">📝 <em>${material.title || 'Text content'} is being prepared. This will contain important lesson information and explanations.</em></p>`;
+            
+            return `
+                <div class="material-item text-material" data-index="${index}">
+                    <div class="material-content">
+                        ${textContent}
+                    </div>
+                </div>
+            `;
+            
+        case 'vocabulary':
+            const vocabContent = material.content && material.content.trim() ? 
+                renderPreviewVocabularyContent(material.content) : 
+                `<div class="placeholder-vocab">
+                    <p>📚 <em>Vocabulary list for "${material.title || 'this section'}" is being prepared.</em></p>
+                    <div class="sample-vocab">
+                        <div class="vocab-item sample">
+                            <span class="arabic">Example: السَّلَامُ عَلَيْكُمْ</span>
+                            <span class="translation">Peace be upon you</span>
+                        </div>
+                    </div>
+                </div>`;
+                
+            return `
+                <div class="material-item vocabulary-material" data-index="${index}">
+                    <h3 class="material-title">Vocabulary</h3>
+                    <div class="vocabulary-list">
+                        ${vocabContent}
+                    </div>
+                </div>
+            `;
+            
+        case 'image':
+            const hasValidImage = material.file_url && (material.file_url.startsWith('data:image') || material.file_url.startsWith('http'));
+            let imageContent;
+            
+            if (hasValidImage) {
+                imageContent = `
+                    <div class="lesson-image-container">
+                        <img src="${material.file_url}" 
+                             alt="${escapeHtml(material.title || 'Lesson image')}" 
+                             class="lesson-image"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                             onload="console.log('Preview image loaded successfully')">
+                        <div class="image-fallback" style="display: none;">
+                            <div class="image-placeholder-icon">🖼️</div>
+                            <p><em>Image could not be loaded</em></p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                imageContent = `
+                    <div class="placeholder-image">
+                        <div class="image-placeholder-icon">🖼️</div>
+                        <p><em>Image for "${escapeHtml(material.title || 'this section')}" will be added soon</em></p>
+                    </div>
+                `;
+            }
+                
+            return `
+                <div class="material-item image-material" data-index="${index}">
+                    <div class="image-container">
+                        ${imageContent}
+                        ${material.content && material.content.trim() ? `<p class="image-caption">${escapeHtml(material.content)}</p>` : ''}
+                    </div>
+                </div>
+            `;
+            
+        case 'quiz_question':
+            return `
+                <div class="material-item quiz-material" data-index="${index}">
+                    <div class="quiz-content">
+                        ${renderPreviewQuizContent(material.content, material.metadata)}
+                    </div>
+                </div>
+            `;
+            
+        default:
+            return `
+                <div class="material-item generic-material" data-index="${index}">
+                    <div class="material-content">
+                        <p>${escapeHtml(material.content || '📋 Content for this section is being prepared.')}</p>
+                    </div>
+                </div>
+            `;
+    }
+}
+
+// Helper functions for preview content formatting (reuse from lesson.js logic)
+
+function formatPreviewTextContent(content) {
+    if (!content || !content.trim()) {
+        return '<p class="no-content">📝 <em>Text content is being prepared for this section.</em></p>';
+    }
+    
+    // Split content by paragraphs and format
+    const paragraphs = content.split('\n\n').filter(p => p.trim());
+    
+    if (paragraphs.length === 0) {
+        return '<p class="no-content">📝 <em>Text content is being prepared for this section.</em></p>';
+    }
+    
+    return paragraphs.map(p => {
+        const trimmed = p.trim();
+        if (trimmed.startsWith('بِسْمِ اللَّهِ') || /[\u0600-\u06FF]/.test(trimmed)) {
+            // Arabic text
+            return `<p class="arabic-text" dir="rtl">${escapeHtml(trimmed)}</p>`;
+        } else {
+            // English text
+            return `<p class="english-text">${escapeHtml(trimmed)}</p>`;
+        }
+    }).join('');
+}
+
+function renderPreviewVocabularyContent(content) {
+    if (!content || !content.trim()) {
+        return `
+            <div class="placeholder-vocab">
+                <p>📚 <em>Vocabulary items for this lesson are being prepared.</em></p>
+                <div class="sample-vocab-format">
+                    <div class="vocab-note">
+                        <small>Format: Arabic term | English meaning</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Parse vocabulary content into table format
+    const lines = content.split('\n').filter(line => line.trim());
+    
+    if (lines.length === 0) {
+        return renderPreviewVocabularyContent(''); // Use placeholder
+    }
+    
+    let tableRows = '';
+    
+    // Process lines in pairs (Arabic, English)
+    for (let i = 0; i < lines.length; i += 2) {
+        const arabic = lines[i] ? lines[i].trim() : '';
+        const english = lines[i + 1] ? lines[i + 1].trim() : '';
+        
+        // Only add row if we have at least one value
+        if (arabic || english) {
+            tableRows += `
+                <tr>
+                    <td class="vocab-arabic" dir="rtl">${escapeHtml(arabic)}</td>
+                    <td class="vocab-english">${escapeHtml(english)}</td>
+                </tr>
+            `;
+        }
+    }
+    
+    // If no valid pairs found, show placeholder
+    if (!tableRows) {
+        return renderPreviewVocabularyContent(''); // Use placeholder
+    }
+    
+    return `
+        <div class="vocab-table-container">
+            <table class="vocab-table">
+                <thead>
+                    <tr>
+                        <th class="vocab-header-arabic">Arabic</th>
+                        <th class="vocab-header-english">English</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderPreviewQuizContent(content, metadata) {
+    const questionText = content && content.trim() ? 
+        escapeHtml(content) : 
+        'Interactive quiz question will be added here';
+        
+    return `
+        <div class="quiz-question">
+            <div class="question-content">
+                <p>❓ ${questionText}</p>
+            </div>
+            <div class="quiz-placeholder">
+                <div class="quiz-options-preview">
+                    <div class="option-placeholder">○ Answer option A</div>
+                    <div class="option-placeholder">○ Answer option B</div>
+                    <div class="option-placeholder">○ Answer option C</div>
+                </div>
+                <div class="quiz-note">
+                    <em>💡 Interactive quiz features will be fully implemented in the next update</em>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Close preview modal when Escape key is pressed
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && previewModal && previewModal.style.display === 'flex') {
+        closeLessonPreview();
+    }
+});
+
+// Prevent modal content clicks from closing the modal
+document.addEventListener('click', function(e) {
+    if (previewModal && e.target.classList.contains('preview-modal-content')) {
+        e.stopPropagation();
+    }
+});
+
+// Console message for debugging
+console.log('🔧 Admin Dashboard loaded successfully');
+console.log('🔗 Supabase connected:', SUPABASE_URL);
+console.log('👁️ Lesson Preview functionality enabled');

@@ -2897,7 +2897,449 @@ body {
 }
 
 /* ===========================================
-   MATERIAL EDITING ENHANCEMENTS
+   LESSON PREVIEW MODAL
+   =========================================== */
+
+.preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+.preview-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.preview-modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    max-height: 90vh;
+    background: var(--bg-primary);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-modal-header {
+    background: var(--primary-brown);
+    color: white;
+    padding: 1.5rem 2rem;
+    position: relative;
+    border-bottom: 3px solid var(--primary-gold);
+}
+
+.preview-modal-title {
+    font-family: 'Crimson Text', serif;
+    font-size: 1.8rem;
+    margin: 0 0 0.5rem 0;
+    color: white;
+}
+
+.preview-modal-subtitle {
+    font-size: 1rem;
+    margin: 0;
+    opacity: 0.9;
+    color: var(--bg-secondary);
+}
+
+.preview-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 2rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.preview-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.preview-lesson-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    background: var(--bg-primary);
+}
+
+/* Preview Lesson Styles - Mirror the user-side lesson styles */
+
+.preview-lesson-header {
+    margin-bottom: 2rem;
+}
+
+.preview-lesson-title-section {
+    text-align: center;
+    margin: 1rem 0 2rem 0;
+}
+
+.preview-lesson-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.preview-lesson-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(200, 168, 130, 0.1);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.preview-course-title {
+    color: var(--primary-gold) !important;
+    font-weight: 600 !important;
+}
+
+.preview-lesson-duration {
+    color: var(--text-secondary) !important;
+}
+
+.preview-lesson-title {
+    font-family: 'Crimson Text', serif;
+    font-size: 2.5rem;
+    color: var(--primary-brown);
+    margin: 1rem 0;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.preview-lesson-description {
+    margin-bottom: 1rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.preview-lesson-description p {
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+.preview-title-underline {
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-gold), var(--primary-brown));
+    margin: 1rem auto;
+    border-radius: 2px;
+}
+
+.preview-lesson-content-area {
+    margin-top: 2rem;
+}
+
+.preview-lesson-loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.preview-lesson-loading .loading-spinner {
+    font-size: 2rem;
+    animation: spin 1s linear infinite;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.preview-lesson-materials {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Material Items in Preview - Reuse existing styles */
+.preview-lesson-materials .material-item {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(200, 168, 130, 0.2);
+    transition: all 0.3s ease;
+}
+
+.preview-lesson-materials .material-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.preview-lesson-materials .material-title {
+    font-family: 'Crimson Text', serif;
+    font-size: 1.8rem;
+    color: var(--primary-brown);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.preview-lesson-materials .material-title::before {
+    content: '📖';
+    font-size: 1.2rem;
+}
+
+.preview-lesson-materials .text-material .material-title::before {
+    content: '📄';
+}
+
+.preview-lesson-materials .vocabulary-material .material-title::before {
+    content: '📚';
+}
+
+.preview-lesson-materials .image-material .material-title::before {
+    content: '🖼️';
+}
+
+.preview-lesson-materials .quiz-material .material-title::before {
+    content: '❓';
+}
+
+.preview-lesson-materials .material-content {
+    line-height: 1.8;
+    color: var(--text-primary);
+}
+
+.preview-lesson-materials .material-content p {
+    margin-bottom: 1rem;
+}
+
+.preview-lesson-materials .arabic-text {
+    font-size: 1.4rem;
+    line-height: 2;
+    color: var(--primary-brown);
+    font-weight: 500;
+    text-align: right;
+    background: rgba(200, 168, 130, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    direction: rtl;
+}
+
+.preview-lesson-materials .english-text {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+}
+
+/* Vocabulary Table in Preview */
+.preview-lesson-materials .vocab-table-container {
+    margin: 1rem 0;
+    overflow-x: auto;
+}
+
+.preview-lesson-materials .vocab-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.preview-lesson-materials .vocab-table th {
+    background: var(--primary-brown);
+    color: white;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.preview-lesson-materials .vocab-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(200, 168, 130, 0.2);
+}
+
+.preview-lesson-materials .vocab-table .vocab-arabic {
+    font-size: 1.2rem;
+    color: var(--primary-brown);
+    font-weight: 500;
+    text-align: right;
+    direction: rtl;
+}
+
+.preview-lesson-materials .vocab-table .vocab-english {
+    color: var(--text-primary);
+}
+
+/* Image Materials in Preview */
+.preview-lesson-materials .image-container {
+    text-align: center;
+}
+
+.preview-lesson-materials .lesson-image {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    margin: 1rem 0;
+}
+
+.preview-lesson-materials .image-caption {
+    font-style: italic;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.preview-lesson-materials .placeholder-image {
+    background: rgba(200, 168, 130, 0.1);
+    border: 2px dashed rgba(200, 168, 130, 0.4);
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.preview-lesson-materials .image-placeholder-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+/* Quiz Materials in Preview */
+.preview-lesson-materials .quiz-content {
+    background: rgba(147, 51, 234, 0.05);
+    border-left: 4px solid #7c3aed;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.preview-lesson-materials .quiz-question {
+    margin-bottom: 1rem;
+}
+
+.preview-lesson-materials .question-content p {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--primary-brown);
+    margin-bottom: 1rem;
+}
+
+.preview-lesson-materials .quiz-options-preview {
+    margin: 1rem 0;
+}
+
+.preview-lesson-materials .option-placeholder {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(200, 168, 130, 0.3);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.preview-lesson-materials .option-placeholder:hover {
+    border-color: var(--primary-gold);
+    background: rgba(200, 168, 130, 0.1);
+}
+
+.preview-lesson-materials .quiz-note {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(200, 168, 130, 0.1);
+    border-radius: 6px;
+}
+
+/* Placeholder content styles */
+.preview-lesson-materials .placeholder-text,
+.preview-lesson-materials .placeholder-vocab {
+    background: rgba(200, 168, 130, 0.1);
+    border: 2px dashed rgba(200, 168, 130, 0.4);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.preview-lesson-materials .no-materials {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.preview-lesson-materials .no-materials .ornament-top,
+.preview-lesson-materials .no-materials .ornament-bottom {
+    font-size: 2rem;
+    color: var(--primary-gold);
+    margin: 1rem 0;
+}
+
+/* Responsive design for preview modal */
+@media (max-width: 768px) {
+    .preview-modal {
+        padding: 1rem;
+    }
+    
+    .preview-modal-content {
+        max-height: 95vh;
+    }
+    
+    .preview-modal-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .preview-modal-title {
+        font-size: 1.5rem;
+    }
+    
+    .preview-lesson-container {
+        padding: 1rem;
+    }
+    
+    .preview-lesson-title {
+        font-size: 2rem;
+    }
+    
+    .preview-lesson-meta {
+        gap: 1rem;
+    }
+    
+    .preview-lesson-materials .material-item {
+        padding: 1.5rem;
+    }
+}
+
+/* ===========================================
+   END LESSON PREVIEW MODAL
    =========================================== */
 
 /* Material Status Indicators */

@@ -201,6 +201,52 @@
                 <span class="message-text"></span>
             </div>
         </div>
+
+        <!-- Lesson Preview Modal -->
+        <div id="lessonPreviewModal" class="preview-modal" style="display: none;">
+            <div class="preview-modal-overlay" onclick="closeLessonPreview()"></div>
+            <div class="preview-modal-content">
+                <div class="preview-modal-header">
+                    <h2 class="preview-modal-title">👁️ Lesson Preview</h2>
+                    <p class="preview-modal-subtitle">This is how the lesson will appear to students</p>
+                    <button class="preview-close-btn" onclick="closeLessonPreview()">
+                        <span>×</span>
+                    </button>
+                </div>
+                
+                <div class="preview-lesson-container">
+                    <!-- Lesson Header -->
+                    <div class="preview-lesson-header">
+                        <!-- Lesson Title Section -->
+                        <div class="preview-lesson-title-section">
+                            <div class="preview-lesson-meta">
+                                <span class="preview-course-title" id="previewCourseTitle">Course Name</span>
+                                <span class="preview-lesson-duration" id="previewLessonDuration">15 min</span>
+                            </div>
+                            <h1 class="preview-lesson-title" id="previewLessonTitle">Lesson Title</h1>
+                            <div class="preview-lesson-description" id="previewLessonDescription" style="display: none;">
+                                <p id="previewLessonDescriptionText"></p>
+                            </div>
+                            <div class="preview-title-underline"></div>
+                        </div>
+                    </div>
+
+                    <!-- Lesson Content Area -->
+                    <div class="preview-lesson-content-area">
+                        <!-- Loading State -->
+                        <div class="preview-lesson-loading" id="previewLessonLoading">
+                            <div class="loading-spinner">⟳</div>
+                            <p>Loading lesson preview...</p>
+                        </div>
+
+                        <!-- Lesson Materials Container -->
+                        <div class="preview-lesson-materials" id="previewLessonMaterials" style="display: none;">
+                            <!-- Materials will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="admin.js"></script>
