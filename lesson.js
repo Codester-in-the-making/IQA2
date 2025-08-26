@@ -449,7 +449,8 @@ function setupLessonNavigation() {
 }
 
 function updateProgressDots() {
-    if (!courseLessons.length) return;
+    // Check if progressDots element exists (it may have been removed for cleaner layout)
+    if (!progressDots || !courseLessons.length) return;
     
     const currentIndex = courseLessons.findIndex(l => l.id === currentLesson.id);
     
