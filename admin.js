@@ -892,6 +892,14 @@ async function updateLessonMaterials(lessonId) {
             metadata: material.metadata || {}
         };
         
+        console.log(`💾 Processing material ${index + 1}: ${material.type} - ${material.title}`);
+        if (material.type === 'image') {
+            console.log('🖼️ Image material update data:');
+            console.log('  - Has file_url:', !!material.file_url);
+            console.log('  - file_url length:', material.file_url ? material.file_url.length : 0);
+            console.log('  - isExisting:', material.isExisting);
+        }
+        
         if (material.isExisting && material.dbId) {
             // Update existing material
             const { error } = await supabase
@@ -941,6 +949,9 @@ function validateLessonData(data) {
 }
 
 async function createLessonMaterials(lessonId) {
+    console.log('💾 Starting to create lesson materials for lesson:', lessonId);
+    console.log('🖼️ Materials to create:', lessonMaterials);
+    
     for (const material of lessonMaterials) {
         const materialData = {
             lesson_id: lessonId,
@@ -952,12 +963,26 @@ async function createLessonMaterials(lessonId) {
             metadata: material.metadata || {}
         };
         
+        console.log(`💾 Creating material: ${material.type} - ${material.title}`);
+        if (material.type === 'image') {
+            console.log('🖼️ Image material data:');
+            console.log('  - Has file_url:', !!material.file_url);
+            console.log('  - URL:', material.file_url);
+            console.log('  - Storage path:', material.storagePath);
+            
+            // Validate image data
+            const isValid = validateImageData(material);
+            console.log('  - Image validation result:', isValid);
+        }
+        
         const { error } = await supabase
             .from('lesson_materials')
             .insert([materialData]);
             
         if (error) {
-            console.error('Error creating material:', error);
+            console.error('❌ Error creating material:', error);
+        } else {
+            console.log('✅ Material created successfully');
         }
     }
 }
@@ -1036,6 +1061,9 @@ function renderMaterialBuilder() {
                         <div class="image-preview" style="display: block;">
                             <img src="${material.file_url}" alt="Preview" class="preview-image">
                             <span class="image-name">${escapeHtml(material.fileName || 'Current image')}</span>
+                            <div class="image-info">
+                                <small>${material.file_url.startsWith('http') ? '🌐 Stored in cloud' : '💾 Embedded data'}</small>
+                            </div>
                             <button type="button" class="btn-small delete" onclick="clearImageUpload(${index})">
                                 Clear Image
                             </button>
@@ -1081,8 +1109,29 @@ function renderMaterialBuilder() {
 
 function clearImageUpload(index) {
     if (lessonMaterials[index]) {
+        const material = lessonMaterials[index];
+        
+        // Clean up storage if it exists
+        if (material.storagePath) {
+            console.log('🗑️ Cleaning up storage for cleared image:', material.storagePath);
+            
+            // Delete from storage (async, don't wait)
+            supabase.storage
+                .from('lesson-images')
+                .remove([material.storagePath])
+                .then(({ error }) => {
+                    if (error) {
+                        console.warn('⚠️ Storage cleanup warning:', error);
+                    } else {
+                        console.log('✅ Storage cleaned up successfully');
+                    }
+                });
+        }
+        
+        // Clear the material data
         lessonMaterials[index].file_url = null;
         lessonMaterials[index].fileName = null;
+        lessonMaterials[index].storagePath = null;
         
         // Clear the file input
         const fileInput = document.getElementById(`imageInput${index}`);
@@ -1130,6 +1179,25 @@ function moveMaterial(index, direction) {
 }
 
 function removeMaterial(index) {
+    const material = lessonMaterials[index];
+    
+    // Clean up storage if it's an image with storage path
+    if (material && material.type === 'image' && material.storagePath) {
+        console.log('🗑️ Cleaning up storage for removed image:', material.storagePath);
+        
+        // Delete from storage (async, don't wait)
+        supabase.storage
+            .from('lesson-images')
+            .remove([material.storagePath])
+            .then(({ error }) => {
+                if (error) {
+                    console.warn('⚠️ Storage cleanup warning:', error);
+                } else {
+                    console.log('✅ Storage cleaned up successfully');
+                }
+            });
+    }
+    
     lessonMaterials.splice(index, 1);
     
     // Update orders
@@ -1140,9 +1208,31 @@ function removeMaterial(index) {
     renderMaterialBuilder();
 }
 
-function handleImageUpload(index, input) {
+function validateImageData(material) {
+    console.log('🔍 Validating image data for material:');
+    console.log('  - Material type:', material.type);
+    console.log('  - Has file_url:', !!material.file_url);
+    
+    if (!material.file_url) {
+        console.log('⚠️ No file_url found');
+        return false;
+    }
+    
+    const isHttpUrl = material.file_url.startsWith('http');
+    const isStorageUrl = material.file_url.includes('supabase') || material.file_url.includes('storage');
+    
+    console.log('  - Is HTTP URL:', isHttpUrl);
+    console.log('  - Is Storage URL:', isStorageUrl);
+    console.log('  - URL:', material.file_url);
+    
+    return isHttpUrl;
+}
+
+async function handleImageUpload(index, input) {
     const file = input.files[0];
     if (!file) return;
+    
+    console.log('🖼️ Starting image upload to storage:', file.name, 'Size:', file.size, 'Type:', file.type);
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -1151,39 +1241,67 @@ function handleImageUpload(index, input) {
         return;
     }
     
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-        showErrorMessage('Image file size must be less than 5MB.');
+    // Validate file size (max 10MB for storage)
+    if (file.size > 10 * 1024 * 1024) {
+        showErrorMessage('Image file size must be less than 10MB.');
         input.value = '';
         return;
     }
     
-    showSuccessMessage('Processing image...');
+    showSuccessMessage('Uploading image to storage...');
     
-    // Convert to base64 for storage
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            if (lessonMaterials[index]) {
-                lessonMaterials[index].file_url = e.target.result;
-                lessonMaterials[index].fileName = file.name;
-                console.log('Image uploaded successfully:', file.name);
-                console.log('Base64 length:', e.target.result.length);
-                renderMaterialBuilder();
-                showSuccessMessage(`Image "${file.name}" uploaded successfully!`);
-            }
-        } catch (error) {
-            console.error('Error processing image:', error);
-            showErrorMessage('Failed to process image.');
+    try {
+        // Generate unique filename
+        const timestamp = Date.now();
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileName = `lessons/${timestamp}-${sanitizedFileName}`;
+        
+        console.log('📁 Uploading to storage path:', fileName);
+        
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('lesson-images')
+            .upload(fileName, file, {
+                contentType: file.type,
+                upsert: true
+            });
+            
+        if (uploadError) {
+            console.error('❌ Storage upload error:', uploadError);
+            throw uploadError;
         }
-    };
-    
-    reader.onerror = function() {
-        showErrorMessage('Failed to read image file.');
+        
+        console.log('✅ Upload successful:', uploadData);
+        
+        // Get public URL
+        const { data: urlData } = supabase.storage
+            .from('lesson-images')
+            .getPublicUrl(fileName);
+            
+        if (!urlData?.publicUrl) {
+            throw new Error('Failed to get public URL');
+        }
+        
+        console.log('🔗 Public URL generated:', urlData.publicUrl);
+        
+        // Store the public URL and metadata
+        if (lessonMaterials[index]) {
+            lessonMaterials[index].file_url = urlData.publicUrl;
+            lessonMaterials[index].fileName = file.name;
+            lessonMaterials[index].storagePath = fileName; // Store for cleanup
+            
+            console.log('💾 Material updated with storage data');
+            console.log('📦 Material object:', lessonMaterials[index]);
+            
+            renderMaterialBuilder();
+            showSuccessMessage(`Image "${file.name}" uploaded successfully!`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error uploading image:', error);
+        showErrorMessage(`Failed to upload image: ${error.message}`);
         input.value = '';
-    };
-    
-    reader.readAsDataURL(file);
+    }
 }
 
 function resetLessonFormData() {
@@ -1302,6 +1420,8 @@ function populateLessonFormForEdit(lesson) {
     // Load existing materials
     lessonMaterials = [];
     if (lesson.lesson_materials && lesson.lesson_materials.length > 0) {
+        console.log('💾 Loading existing materials:', lesson.lesson_materials);
+        
         lessonMaterials = lesson.lesson_materials
             .sort((a, b) => a.material_order - b.material_order)
             .map(material => {
@@ -1316,6 +1436,12 @@ function populateLessonFormForEdit(lesson) {
                     isExisting: true, // Flag to track existing materials
                     dbId: material.id // Store database ID for updates
                 };
+                
+                if (material.material_type === 'image') {
+                    console.log(`🖼️ Loading image material: ${material.title}`);
+                    console.log('  - Has file_url:', !!material.file_url);
+                    console.log('  - URL:', material.file_url);
+                }
                 
                 // Parse vocabulary content into table format
                 if (material.material_type === 'vocabulary') {
@@ -1602,6 +1728,12 @@ function renderPreviewMaterial(material, index) {
             
         case 'image':
             const hasValidImage = material.file_url && (material.file_url.startsWith('data:image') || material.file_url.startsWith('http'));
+            console.log(`🖼️ Rendering image material in preview:`);
+            console.log('  - Material:', material.title);
+            console.log('  - Has file_url:', !!material.file_url);
+            console.log('  - URL type:', material.file_url ? (material.file_url.startsWith('data:image') ? 'base64' : 'URL') : 'none');
+            console.log('  - hasValidImage:', hasValidImage);
+            
             let imageContent;
             
             if (hasValidImage) {
@@ -1610,8 +1742,8 @@ function renderPreviewMaterial(material, index) {
                         <img src="${material.file_url}" 
                              alt="${escapeHtml(material.title || 'Lesson image')}" 
                              class="lesson-image"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                             onload="console.log('Preview image loaded successfully')">
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block'; console.error('Preview image failed to load:', '${material.file_url}');"
+                             onload="console.log('Preview image loaded successfully:', '${material.title}')">
                         <div class="image-fallback" style="display: none;">
                             <div class="image-placeholder-icon">🖼️</div>
                             <p><em>Image could not be loaded</em></p>

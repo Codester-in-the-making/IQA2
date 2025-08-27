@@ -257,6 +257,12 @@ function renderMaterial(material, index) {
             
         case 'image':
             const hasValidImage = material.file_url && (material.file_url.startsWith('data:image') || material.file_url.startsWith('http'));
+            console.log(`🖼️ Rendering image material on user side:`);
+            console.log('  - Material:', material.title);
+            console.log('  - Has file_url:', !!material.file_url);
+            console.log('  - URL type:', material.file_url ? (material.file_url.startsWith('data:image') ? 'base64' : 'URL') : 'none');
+            console.log('  - hasValidImage:', hasValidImage);
+            
             let imageContent;
             
             if (hasValidImage) {
@@ -265,8 +271,8 @@ function renderMaterial(material, index) {
                         <img src="${material.file_url}" 
                              alt="${escapeHtml(material.title || 'Lesson image')}" 
                              class="lesson-image"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                             onload="console.log('Image loaded successfully')">
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block'; console.error('User-side image failed to load:', '${material.file_url}');"
+                             onload="console.log('User-side image loaded successfully:', '${material.title}')">
                         <div class="image-fallback" style="display: none;">
                             <div class="image-placeholder-icon">🖼️</div>
                             <p><em>Image could not be loaded</em></p>
