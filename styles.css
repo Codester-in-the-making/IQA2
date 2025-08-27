@@ -1932,6 +1932,164 @@ body {
     font-weight: 500;
 }
 
+/* Image Sizing Controls */
+.image-sizing-controls {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(200, 168, 130, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(200, 168, 130, 0.1);
+}
+
+.sizing-section {
+    margin-bottom: 1rem;
+}
+
+.sizing-section:last-child {
+    margin-bottom: 0;
+}
+
+.sizing-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b5b4a;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Slider Control */
+.size-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.size-slider {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(200, 168, 130, 0.2);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.size-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #c8a882;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.size-slider::-webkit-slider-thumb:hover {
+    background: #ba936d;
+    transform: scale(1.1);
+}
+
+.size-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #c8a882;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.size-value {
+    min-width: 50px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b5b4a;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    border: 1px solid rgba(200, 168, 130, 0.2);
+}
+
+/* Preset Buttons */
+.size-presets {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.size-preset-btn {
+    padding: 0.4rem 0.8rem;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(200, 168, 130, 0.3);
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #6b5b4a;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.size-preset-btn:hover {
+    background: rgba(200, 168, 130, 0.1);
+    border-color: rgba(200, 168, 130, 0.5);
+    transform: translateY(-1px);
+}
+
+.size-preset-btn.active {
+    background: #c8a882;
+    color: white;
+    border-color: #c8a882;
+    box-shadow: 0 2px 6px rgba(200, 168, 130, 0.3);
+}
+
+/* Responsive Image Container */
+.responsive-image-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0.5rem 0;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border-radius: 6px;
+}
+
+.responsive-image-container.size-small {
+    max-width: 200px;
+}
+
+.responsive-image-container.size-medium {
+    max-width: 400px;
+}
+
+.responsive-image-container.size-large {
+    max-width: 600px;
+}
+
+.responsive-image-container.size-full {
+    max-width: 100%;
+}
+
+.resizable-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.custom-size-container {
+    transform-origin: top left;
+    transition: transform 0.3s ease;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .course-detail-container,
@@ -2818,6 +2976,39 @@ body {
     font-style: italic;
     color: var(--text-secondary);
     line-height: 1.6;
+}
+
+/* User-side Image Sizing Support */
+.lesson-image-container.size-small {
+    max-width: 300px;
+}
+
+.lesson-image-container.size-medium {
+    max-width: 500px;
+}
+
+.lesson-image-container.size-large {
+    max-width: 700px;
+}
+
+.lesson-image-container.size-full {
+    max-width: 100%;
+}
+
+/* Responsive adjustments for user-side images */
+@media (max-width: 768px) {
+    .lesson-image-container.size-large,
+    .lesson-image-container.size-full {
+        max-width: 100%;
+    }
+    
+    .lesson-image-container.size-medium {
+        max-width: 90%;
+    }
+    
+    .lesson-image-container.size-small {
+        max-width: 80%;
+    }
 }
 
 /* Progress Dots Enhancement */

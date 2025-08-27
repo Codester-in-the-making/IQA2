@@ -889,7 +889,14 @@ async function updateLessonMaterials(lessonId) {
             content: material.content,
             file_url: material.file_url || null,
             material_order: index + 1,
-            metadata: material.metadata || {}
+            metadata: {
+                ...material.metadata,
+                // Add image sizing information for image materials
+                ...(material.type === 'image' && {
+                    imageSize: material.imageSize || 100,
+                    sizePreset: material.sizePreset || 'medium'
+                })
+            }
         };
         
         console.log(`💾 Processing material ${index + 1}: ${material.type} - ${material.title}`);
@@ -960,7 +967,14 @@ async function createLessonMaterials(lessonId) {
             content: material.content,
             file_url: material.file_url || null, // Include file_url for images
             material_order: material.order,
-            metadata: material.metadata || {}
+            metadata: {
+                ...material.metadata,
+                // Add image sizing information for image materials
+                ...(material.type === 'image' && {
+                    imageSize: material.imageSize || 100,
+                    sizePreset: material.sizePreset || 'medium'
+                })
+            }
         };
         
         console.log(`💾 Creating material: ${material.type} - ${material.title}`);
@@ -1059,11 +1073,43 @@ function renderMaterialBuilder() {
                     </label>
                     ${hasImage ? `
                         <div class="image-preview" style="display: block;">
-                            <img src="${material.file_url}" alt="Preview" class="preview-image">
+                            <div class="responsive-image-container" id="imageContainer${index}">
+                                <img src="${material.file_url}" alt="Preview" class="preview-image resizable-image" id="previewImage${index}">
+                            </div>
                             <span class="image-name">${escapeHtml(material.fileName || 'Current image')}</span>
                             <div class="image-info">
                                 <small>${material.file_url.startsWith('http') ? '🌐 Stored in cloud' : '💾 Embedded data'}</small>
                             </div>
+                            
+                            <!-- Image Sizing Controls -->
+                            <div class="image-sizing-controls" id="sizingControls${index}">
+                                <!-- Slider Control -->
+                                <div class="sizing-section">
+                                    <label class="sizing-label">🔧 Custom Size</label>
+                                    <div class="size-slider-container">
+                                        <input type="range" class="size-slider" id="sizeSlider${index}" 
+                                               min="25" max="200" value="${material.imageSize || 100}" 
+                                               oninput="updateImageSize(${index}, this.value, 'slider')">
+                                        <span class="size-value" id="sizeValue${index}">${material.imageSize || 100}%</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Preset Buttons -->
+                                <div class="sizing-section">
+                                    <label class="sizing-label">📐 Quick Presets</label>
+                                    <div class="size-presets">
+                                        <button type="button" class="size-preset-btn" data-size="small" 
+                                                onclick="updateImageSize(${index}, 'small', 'preset')">Small</button>
+                                        <button type="button" class="size-preset-btn" data-size="medium" 
+                                                onclick="updateImageSize(${index}, 'medium', 'preset')">Medium</button>
+                                        <button type="button" class="size-preset-btn" data-size="large" 
+                                                onclick="updateImageSize(${index}, 'large', 'preset')">Large</button>
+                                        <button type="button" class="size-preset-btn" data-size="full" 
+                                                onclick="updateImageSize(${index}, 'full', 'preset')">Full Width</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <button type="button" class="btn-small delete" onclick="clearImageUpload(${index})">
                                 Clear Image
                             </button>
@@ -1294,6 +1340,10 @@ async function handleImageUpload(index, input) {
             console.log('📦 Material object:', lessonMaterials[index]);
             
             renderMaterialBuilder();
+            
+            // Initialize image sizing controls
+            initializeImageSizing(index);
+            
             showSuccessMessage(`Image "${file.name}" uploaded successfully!`);
         }
         
@@ -1441,6 +1491,14 @@ function populateLessonFormForEdit(lesson) {
                     console.log(`🖼️ Loading image material: ${material.title}`);
                     console.log('  - Has file_url:', !!material.file_url);
                     console.log('  - URL:', material.file_url);
+                    
+                    // Load image sizing data from metadata
+                    if (material.metadata) {
+                        materialObj.imageSize = material.metadata.imageSize || 100;
+                        materialObj.sizePreset = material.metadata.sizePreset || 'medium';
+                        console.log('  - Image size:', materialObj.imageSize + '%');
+                        console.log('  - Size preset:', materialObj.sizePreset);
+                    }
                 }
                 
                 // Parse vocabulary content into table format
@@ -1453,6 +1511,15 @@ function populateLessonFormForEdit(lesson) {
     }
     
     renderMaterialBuilder();
+    
+    // Initialize image sizing controls for any existing image materials
+    setTimeout(() => {
+        lessonMaterials.forEach((material, index) => {
+            if (material.type === 'image' && material.file_url) {
+                initializeImageSizing(index);
+            }
+        });
+    }, 200);
     
     // Update form submit button text and show cancel button
     updateFormForEditMode(true);
@@ -1917,3 +1984,116 @@ document.addEventListener('click', function(e) {
 console.log('🔧 Admin Dashboard loaded successfully');
 console.log('🔗 Supabase connected:', SUPABASE_URL);
 console.log('👁️ Lesson Preview functionality enabled');
+
+// ========================================
+//   Image Sizing Control Functions
+// ========================================
+
+/**
+ * Update image size based on slider or preset selection
+ * @param {number} index - Material index
+ * @param {string|number} value - Size value (percentage for slider, preset name for buttons)
+ * @param {string} type - 'slider' or 'preset'
+ */
+function updateImageSize(index, value, type) {
+    const material = lessonMaterials[index];
+    if (!material || material.type !== 'image') return;
+    
+    console.log(`🖼️ Updating image size for material ${index}:`, { value, type });
+    
+    const container = document.getElementById(`imageContainer${index}`);
+    const image = document.getElementById(`previewImage${index}`);
+    const slider = document.getElementById(`sizeSlider${index}`);
+    const sizeValue = document.getElementById(`sizeValue${index}`);
+    const presetButtons = container?.parentElement.querySelectorAll('.size-preset-btn');
+    
+    if (!container || !image || !slider || !sizeValue) return;
+    
+    let sizePercentage;
+    let presetClass = '';
+    
+    if (type === 'slider') {
+        // Handle slider input (25-200%)
+        sizePercentage = parseInt(value);
+        
+        // Clear preset classes and button states
+        container.className = 'responsive-image-container custom-size-container';
+        presetButtons?.forEach(btn => btn.classList.remove('active'));
+        
+        // Apply custom scale transform
+        const scale = sizePercentage / 100;
+        container.style.transform = `scale(${scale})`;
+        container.style.transformOrigin = 'top left';
+        
+    } else if (type === 'preset') {
+        // Handle preset button selection
+        const presetSizes = {
+            'small': 50,
+            'medium': 100,
+            'large': 150,
+            'full': 200
+        };
+        
+        sizePercentage = presetSizes[value] || 100;
+        presetClass = `size-${value}`;
+        
+        // Update container class for preset
+        container.className = `responsive-image-container ${presetClass}`;
+        container.style.transform = ''; // Clear custom transform
+        
+        // Update button states
+        presetButtons?.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.size === value);
+        });
+        
+        // Update slider to match preset
+        slider.value = sizePercentage;
+    }
+    
+    // Update the size value display
+    sizeValue.textContent = `${sizePercentage}%`;
+    
+    // Store the size preference in the material object
+    material.imageSize = sizePercentage;
+    material.sizePreset = type === 'preset' ? value : 'custom';
+    
+    console.log(`✅ Image size updated to ${sizePercentage}% (${type}:${value})`);
+    console.log('📦 Material sizing data:', { 
+        imageSize: material.imageSize, 
+        sizePreset: material.sizePreset 
+    });
+}
+
+/**
+ * Initialize image sizing controls after image upload
+ * @param {number} index - Material index
+ */
+function initializeImageSizing(index) {
+    const material = lessonMaterials[index];
+    if (!material || material.type !== 'image') return;
+    
+    // Set default size if not already set
+    if (!material.imageSize) {
+        material.imageSize = 100;
+        material.sizePreset = 'medium';
+    }
+    
+    // Wait for DOM to be ready, then apply saved settings
+    setTimeout(() => {
+        const container = document.getElementById(`imageContainer${index}`);
+        const slider = document.getElementById(`sizeSlider${index}`);
+        const sizeValue = document.getElementById(`sizeValue${index}`);
+        const presetButtons = container?.parentElement.querySelectorAll('.size-preset-btn');
+        
+        if (container && slider && sizeValue) {
+            // Apply saved size
+            if (material.sizePreset && material.sizePreset !== 'custom') {
+                updateImageSize(index, material.sizePreset, 'preset');
+            } else {
+                updateImageSize(index, material.imageSize, 'slider');
+            }
+            
+            console.log(`🎛️ Image sizing controls initialized for material ${index}`);
+        }
+    }, 100);
+}

@@ -263,11 +263,30 @@ function renderMaterial(material, index) {
             console.log('  - URL type:', material.file_url ? (material.file_url.startsWith('data:image') ? 'base64' : 'URL') : 'none');
             console.log('  - hasValidImage:', hasValidImage);
             
+            // Get sizing information from metadata
+            const imageSize = material.metadata?.imageSize || 100;
+            const sizePreset = material.metadata?.sizePreset || 'medium';
+            console.log('  - Image size:', imageSize + '%');
+            console.log('  - Size preset:', sizePreset);
+            
             let imageContent;
             
             if (hasValidImage) {
+                // Apply sizing based on metadata
+                let containerClass = 'lesson-image-container';
+                let containerStyle = '';
+                
+                if (sizePreset && sizePreset !== 'custom') {
+                    // Use preset classes
+                    containerClass += ` size-${sizePreset}`;
+                } else if (imageSize !== 100) {
+                    // Use custom scale
+                    const scale = imageSize / 100;
+                    containerStyle = `transform: scale(${scale}); transform-origin: top left;`;
+                }
+                
                 imageContent = `
-                    <div class="lesson-image-container">
+                    <div class="${containerClass}" style="${containerStyle}">
                         <img src="${material.file_url}" 
                              alt="${escapeHtml(material.title || 'Lesson image')}" 
                              class="lesson-image"
