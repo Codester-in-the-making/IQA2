@@ -423,26 +423,140 @@ function renderVocabularyContent(content) {
 }
 
 function renderQuizContent(content, metadata) {
-    const questionText = content && content.trim() ? 
-        escapeHtml(content) : 
-        'Interactive quiz question will be added here';
+    // Check if we have quiz data in the metadata
+    let quizData;
+    if (metadata && metadata.quizData) {
+        quizData = metadata.quizData;
+        console.log('🎯 Rendering user-side quiz from metadata:', quizData);
+    } else {
+        // Fallback to simple content text
+        const questionText = content && content.trim() ? 
+            escapeHtml(content) : 
+            'Interactive quiz question will be added here';
+            
+        console.log('🎯 Rendering user-side quiz from content text (legacy):', content);
         
-    return `
-        <div class="quiz-question">
-            <div class="question-content">
-                <p>❓ ${questionText}</p>
-            </div>
-            <div class="quiz-placeholder">
-                <div class="quiz-options-preview">
-                    <div class="option-placeholder">○ Answer option A</div>
-                    <div class="option-placeholder">○ Answer option B</div>
-                    <div class="option-placeholder">○ Answer option C</div>
+        return `
+            <div class="quiz-question">
+                <div class="question-content">
+                    <p>❓ ${questionText}</p>
                 </div>
-                <div class="quiz-note">
-                    <em>💡 Interactive quiz features will be fully implemented in the next update</em>
+                <div class="quiz-placeholder">
+                    <div class="quiz-options-preview">
+                        <div class="option-placeholder">○ Answer option A</div>
+                        <div class="option-placeholder">○ Answer option B</div>
+                        <div class="option-placeholder">○ Answer option C</div>
+                    </div>
+                    <div class="quiz-note">
+                        <em>💡 Interactive quiz features will be fully implemented in the next update</em>
+                    </div>
                 </div>
             </div>
+        `;
+    }
+    
+    // Generate quiz options markup based on question type
+    let optionsHtml;
+    
+    if (quizData.questionType === 'true_false') {
+        optionsHtml = `
+            <div class="quiz-options">
+                <div class="quiz-option" onclick="handleQuizAnswer(this, ${quizData.options.find(o => o.id === 'T')?.isCorrect})">
+                    <span class="option-indicator">○</span>
+                    <span class="option-text">True</span>
+                </div>
+                <div class="quiz-option" onclick="handleQuizAnswer(this, ${quizData.options.find(o => o.id === 'F')?.isCorrect})">
+                    <span class="option-indicator">○</span>
+                    <span class="option-text">False</span>
+                </div>
+            </div>
+        `;
+    } else {
+        // Multiple choice options
+        optionsHtml = `
+            <div class="quiz-options">
+                ${quizData.options.filter(option => option.text.trim()).map(option => `
+                    <div class="quiz-option" onclick="handleQuizAnswer(this, ${option.isCorrect})">
+                        <span class="option-indicator">○</span>
+                        <span class="option-text">${escapeHtml(option.text)}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    // Add explanation for feedback (initially hidden)
+    const explanationHtml = quizData.explanation ? `
+        <div class="quiz-explanation" style="display: none;">
+            <h4>Explanation:</h4>
+            <p>${escapeHtml(quizData.explanation)}</p>
         </div>
+    ` : '';
+    
+    return `
+        <div class="quiz-question" data-quiz-id="quiz_${Date.now()}">
+            <div class="question-content">
+                <p>❓ ${escapeHtml(quizData.question)}</p>
+            </div>
+            ${optionsHtml}
+            ${explanationHtml}
+            <div class="quiz-feedback" style="display: none;"></div>
+        </div>
+        <script>
+        function handleQuizAnswer(optionElement, isCorrect) {
+            // Get parent quiz question container
+            const quizContainer = optionElement.closest('.quiz-question');
+            if (!quizContainer) return;
+            
+            // Find all options and disable further selection
+            const allOptions = quizContainer.querySelectorAll('.quiz-option');
+            allOptions.forEach(opt => {
+                opt.classList.add('disabled');
+                opt.onclick = null;
+            });
+            
+            // Mark selected option
+            optionElement.classList.add('selected');
+            
+            // Update option indicator based on correctness
+            const indicator = optionElement.querySelector('.option-indicator');
+            if (indicator) {
+                indicator.textContent = isCorrect ? '✔' : '✖';
+                indicator.style.color = isCorrect ? '#10b981' : '#ef4444';
+            }
+            
+            // Show correct answers if wrong answer selected
+            if (!isCorrect) {
+                allOptions.forEach(opt => {
+                    const isOptCorrect = opt.getAttribute('onclick')?.includes('true');
+                    const optIndicator = opt.querySelector('.option-indicator');
+                    if (isOptCorrect && optIndicator) {
+                        optIndicator.textContent = '✔';
+                        optIndicator.style.color = '#10b981';
+                        opt.classList.add('correct-answer');
+                    }
+                });
+            }
+            
+            // Show feedback
+            const feedback = quizContainer.querySelector('.quiz-feedback');
+            if (feedback) {
+                feedback.style.display = 'block';
+                feedback.innerHTML = isCorrect ?
+                    '<div class="correct-feedback">✅ Correct! Well done.</div>' :
+                    '<div class="incorrect-feedback">❌ Incorrect. Review the correct answer.</div>';
+            }
+            
+            // Show explanation if available
+            const explanation = quizContainer.querySelector('.quiz-explanation');
+            if (explanation) {
+                explanation.style.display = 'block';
+            }
+            
+            // Update progress for the lesson
+            window.updateProgressBasedOnInteraction && window.updateProgressBasedOnInteraction();
+        }
+        </script>
     `;
 }
 

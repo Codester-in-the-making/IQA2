@@ -1021,6 +1021,23 @@ function addMaterial(materialType) {
         material.vocabularyData = [{ arabic: '', english: '' }];
     }
     
+    // Initialize quiz data for quiz materials
+    if (materialType === 'quiz_question') {
+        material.quizData = {
+            questionType: 'multiple_choice', // 'multiple_choice' or 'true_false'
+            question: '',
+            options: [
+                { id: 'A', text: '', isCorrect: false },
+                { id: 'B', text: '', isCorrect: false },
+                { id: 'C', text: '', isCorrect: false },
+                { id: 'D', text: '', isCorrect: false }
+            ],
+            explanation: ''
+        };
+        // Store quiz data in metadata for database compatibility
+        material.metadata.quizData = material.quizData;
+    }
+    
     lessonMaterials.push(material);
     renderMaterialBuilder();
     
@@ -1032,6 +1049,397 @@ function addMaterial(materialType) {
             lastMaterial.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }, 100);
+}
+
+// ========================================
+//   Quiz Builder Functions
+// ========================================
+
+/**
+ * Renders quiz options based on question type
+ * @param {Object} quizData - The quiz data object
+ * @param {number} materialIndex - Material index
+ * @returns {string} HTML for quiz options
+ */
+function renderQuizOptions(quizData, materialIndex) {
+    if (quizData.questionType === 'true_false') {
+        // For True/False questions, just show True and False options
+        return `
+            <div class="quiz-option-item">
+                <span class="option-label">T</span>
+                <input type="text" class="option-input" value="True" disabled>
+                <label class="option-correct-checkbox">
+                    <input type="checkbox" ${quizData.options.find(o => o.id === 'T')?.isCorrect ? 'checked' : ''}
+                           onchange="setQuizCorrectOption(${materialIndex}, 'T', this.checked)">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="quiz-option-item">
+                <span class="option-label">F</span>
+                <input type="text" class="option-input" value="False" disabled>
+                <label class="option-correct-checkbox">
+                    <input type="checkbox" ${quizData.options.find(o => o.id === 'F')?.isCorrect ? 'checked' : ''}
+                           onchange="setQuizCorrectOption(${materialIndex}, 'F', this.checked)">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+        `;
+    } else {
+        // For Multiple Choice questions, show all options with add/remove capabilities
+        return quizData.options.map((option, optionIndex) => {
+            return `
+                <div class="quiz-option-item" id="quizOption${materialIndex}_${optionIndex}">
+                    <span class="option-label">${option.id}</span>
+                    <input type="text" class="option-input" 
+                           value="${escapeHtml(option.text)}" 
+                           placeholder="Enter answer option..."
+                           onchange="updateQuizOptionText(${materialIndex}, ${optionIndex}, this.value)">
+                    <label class="option-correct-checkbox">
+                        <input type="checkbox" ${option.isCorrect ? 'checked' : ''}
+                               onchange="setQuizCorrectOption(${materialIndex}, ${optionIndex}, this.checked)">
+                        <span class="checkmark"></span>
+                    </label>
+                    ${optionIndex > 3 ? `
+                        <button type="button" class="remove-option-btn" 
+                                onclick="removeQuizOption(${materialIndex}, ${optionIndex})">
+                            ×
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+/**
+ * Updates the question type (multiple choice or true/false)
+ * @param {number} index - Material index
+ * @param {string} type - Question type ('multiple_choice' or 'true_false')
+ */
+function updateQuizType(index, type) {
+    const material = lessonMaterials[index];
+    if (!material || material.type !== 'quiz_question') return;
+    
+    console.log(`🎯 Updating quiz type for material ${index}:`, type);
+    
+    // Update quiz data
+    material.quizData.questionType = type;
+    
+    // Update UI to reflect type change
+    const typeOptions = document.querySelectorAll(`[name="quizType${index}"]`);
+    typeOptions.forEach(option => {
+        const label = option.closest('.quiz-type-option');
+        if (label) {
+            label.classList.toggle('active', option.checked);
+        }
+    });
+    
+    // Reset options for true/false questions
+    if (type === 'true_false') {
+        material.quizData.options = [
+            { id: 'T', text: 'True', isCorrect: false },
+            { id: 'F', text: 'False', isCorrect: false }
+        ];
+    } else if (!material.quizData.options || material.quizData.options.length < 2) {
+        // Reset to default multiple choice options if needed
+        material.quizData.options = [
+            { id: 'A', text: '', isCorrect: false },
+            { id: 'B', text: '', isCorrect: false },
+            { id: 'C', text: '', isCorrect: false },
+            { id: 'D', text: '', isCorrect: false }
+        ];
+    }
+    
+    // Store in metadata for database compatibility
+    material.metadata.quizData = material.quizData;
+    
+    // Re-render the options section
+    const optionsContainer = document.getElementById(`quizOptionsList${index}`);
+    if (optionsContainer) {
+        optionsContainer.innerHTML = renderQuizOptions(material.quizData, index);
+    }
+    
+    // Show/hide the add option button based on type
+    const optionsHeader = document.querySelector(`#quizBuilder${index} .quiz-options-header`);
+    if (optionsHeader) {
+        optionsHeader.innerHTML = `
+            <h6 class="quiz-options-title">Answer Options:</h6>
+            ${type === 'multiple_choice' ? `
+                <button type="button" class="add-option-btn" onclick="addQuizOption(${index})">
+                    <span>+</span> Add Option
+                </button>
+            ` : ''}
+        `;
+    }
+}
+
+/**
+ * Updates the quiz question text
+ * @param {number} index - Material index
+ * @param {string} question - Question text
+ */
+function updateQuizQuestion(index, question) {
+    const material = lessonMaterials[index];
+    if (!material || material.type !== 'quiz_question') return;
+    
+    material.quizData.question = question;
+    material.content = question; // Store in content for backward compatibility
+    material.metadata.quizData = material.quizData;
+    
+    console.log(`📝 Updated quiz question for material ${index}:`, question);
+}
+
+/**
+ * Updates quiz option text
+ * @param {number} materialIndex - Material index
+ * @param {number|string} optionIndex - Option index or ID for T/F
+ * @param {string} text - Option text
+ */
+function updateQuizOptionText(materialIndex, optionIndex, text) {
+    const material = lessonMaterials[materialIndex];
+    if (!material || material.type !== 'quiz_question') return;
+    
+    if (typeof optionIndex === 'string' && material.quizData.questionType === 'true_false') {
+        // Handle true/false options by ID
+        const option = material.quizData.options.find(o => o.id === optionIndex);
+        if (option) {
+            option.text = text;
+        }
+    } else if (typeof optionIndex === 'number') {
+        // Handle multiple choice options by index
+        if (material.quizData.options[optionIndex]) {
+            material.quizData.options[optionIndex].text = text;
+        }
+    }
+    
+    // Store in metadata for database compatibility
+    material.metadata.quizData = material.quizData;
+}
+
+/**
+ * Sets the correct answer for a quiz option
+ * @param {number} materialIndex - Material index
+ * @param {number|string} optionIndex - Option index or ID for T/F
+ * @param {boolean} isCorrect - Whether option is correct
+ */
+function setQuizCorrectOption(materialIndex, optionIndex, isCorrect) {
+    const material = lessonMaterials[materialIndex];
+    if (!material || material.type !== 'quiz_question') return;
+    
+    let targetOption;
+    
+    if (typeof optionIndex === 'string' && material.quizData.questionType === 'true_false') {
+        // Handle true/false options by ID
+        targetOption = material.quizData.options.find(o => o.id === optionIndex);
+        
+        // For T/F, ensure only one is correct (radio button behavior)
+        if (isCorrect && targetOption) {
+            material.quizData.options.forEach(opt => {
+                opt.isCorrect = (opt.id === optionIndex);
+            });
+            
+            // Update the other checkbox in the UI
+            const otherOptionId = optionIndex === 'T' ? 'F' : 'T';
+            const otherCheckbox = document.querySelector(`#quizBuilder${materialIndex} input[onchange*="setQuizCorrectOption(${materialIndex}, '${otherOptionId}'"]`);
+            if (otherCheckbox) {
+                otherCheckbox.checked = false;
+            }
+        }
+    } else if (typeof optionIndex === 'number') {
+        // Handle multiple choice options by index
+        targetOption = material.quizData.options[optionIndex];
+        if (targetOption) {
+            targetOption.isCorrect = isCorrect;
+        }
+    }
+    
+    // Store in metadata for database compatibility
+    material.metadata.quizData = material.quizData;
+    
+    console.log(`✅ Updated correct answer for option ${optionIndex} to ${isCorrect}`, material.quizData.options);
+}
+
+/**
+ * Adds a new option to a multiple choice quiz
+ * @param {number} index - Material index
+ */
+function addQuizOption(index) {
+    const material = lessonMaterials[index];
+    if (!material || material.type !== 'quiz_question' || material.quizData.questionType !== 'multiple_choice') return;
+    
+    const options = material.quizData.options;
+    const newOptionId = String.fromCharCode(65 + options.length); // A, B, C, D, E, etc.
+    
+    options.push({
+        id: newOptionId,
+        text: '',
+        isCorrect: false
+    });
+    
+    // Store in metadata for database compatibility
+    material.metadata.quizData = material.quizData;
+    
+    // Re-render the options section
+    const optionsContainer = document.getElementById(`quizOptionsList${index}`);
+    if (optionsContainer) {
+        optionsContainer.innerHTML = renderQuizOptions(material.quizData, index);
+    }
+    
+    console.log(`➕ Added new quiz option ${newOptionId} to material ${index}`);
+}
+
+/**
+ * Removes an option from a multiple choice quiz
+ * @param {number} materialIndex - Material index
+ * @param {number} optionIndex - Option index
+ */
+function removeQuizOption(materialIndex, optionIndex) {
+    const material = lessonMaterials[materialIndex];
+    if (!material || material.type !== 'quiz_question' || material.quizData.questionType !== 'multiple_choice') return;
+    
+    // Don't allow removing if we only have 2 options left
+    if (material.quizData.options.length <= 2) {
+        showErrorMessage('Quiz questions must have at least 2 options.');
+        return;
+    }
+    
+    // Remove the option
+    material.quizData.options.splice(optionIndex, 1);
+    
+    // Re-assign option IDs (A, B, C, etc.)
+    material.quizData.options.forEach((option, idx) => {
+        option.id = String.fromCharCode(65 + idx);
+    });
+    
+    // Store in metadata for database compatibility
+    material.metadata.quizData = material.quizData;
+    
+    // Re-render the options section
+    const optionsContainer = document.getElementById(`quizOptionsList${materialIndex}`);
+    if (optionsContainer) {
+        optionsContainer.innerHTML = renderQuizOptions(material.quizData, materialIndex);
+    }
+    
+    console.log(`➖ Removed quiz option from material ${materialIndex}`);
+}
+
+/**
+ * Updates the explanation text for a quiz
+ * @param {number} index - Material index
+ * @param {string} explanation - Explanation text
+ */
+function updateQuizExplanation(index, explanation) {
+    const material = lessonMaterials[index];
+    if (!material || material.type !== 'quiz_question') return;
+    
+    material.quizData.explanation = explanation;
+    material.metadata.quizData = material.quizData;
+    
+    console.log(`📝 Updated quiz explanation for material ${index}`);
+}
+
+/**
+ * Shows a preview of the quiz
+ * @param {number} index - Material index
+ */
+function previewQuiz(index) {
+    const material = lessonMaterials[index];
+    if (!material || material.type !== 'quiz_question') return;
+    
+    console.log(`👁️ Previewing quiz for material ${index}:`, material.quizData);
+    
+    // Create modal if it doesn't exist
+    let previewModal = document.getElementById('quizPreviewModal');
+    if (!previewModal) {
+        previewModal = document.createElement('div');
+        previewModal.id = 'quizPreviewModal';
+        previewModal.className = 'quiz-preview-modal';
+        previewModal.style.display = 'none';
+        document.body.appendChild(previewModal);
+    }
+    
+    // Generate the preview content
+    const quizData = material.quizData;
+    const hasValidQuestion = quizData.question && quizData.question.trim();
+    const hasValidOptions = quizData.options.some(opt => opt.text && opt.text.trim());
+    
+    let optionsHtml = '';
+    
+    if (quizData.questionType === 'true_false') {
+        optionsHtml = `
+            <div class="quiz-options">
+                <label class="quiz-option ${quizData.options.find(o => o.id === 'T')?.isCorrect ? 'correct-answer' : ''}">
+                    <input type="radio" name="previewQuiz${index}" disabled>
+                    <span>True</span>
+                    ${quizData.options.find(o => o.id === 'T')?.isCorrect ? '<span class="correct-marker">✓</span>' : ''}
+                </label>
+                <label class="quiz-option ${quizData.options.find(o => o.id === 'F')?.isCorrect ? 'correct-answer' : ''}">
+                    <input type="radio" name="previewQuiz${index}" disabled>
+                    <span>False</span>
+                    ${quizData.options.find(o => o.id === 'F')?.isCorrect ? '<span class="correct-marker">✓</span>' : ''}
+                </label>
+            </div>
+        `;
+    } else {
+        optionsHtml = `
+            <div class="quiz-options">
+                ${quizData.options.map(option => {
+                    const optionText = option.text.trim() || `Option ${option.id}`;
+                    return `
+                        <label class="quiz-option ${option.isCorrect ? 'correct-answer' : ''}">
+                            <input type="radio" name="previewQuiz${index}" disabled>
+                            <span>${escapeHtml(optionText)}</span>
+                            ${option.isCorrect ? '<span class="correct-marker">✓</span>' : ''}
+                        </label>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+    
+    const explanationHtml = quizData.explanation ? `
+        <div class="quiz-explanation">
+            <h4>Explanation:</h4>
+            <p>${escapeHtml(quizData.explanation)}</p>
+        </div>
+    ` : '';
+    
+    // Set the modal content
+    previewModal.innerHTML = `
+        <div class="quiz-preview-content">
+            <div class="quiz-preview-header">
+                <h3 class="quiz-preview-title">Quiz Preview</h3>
+                <button class="quiz-preview-close" onclick="closeQuizPreview()">&times;</button>
+            </div>
+            <div class="quiz-preview-body">
+                <div class="quiz-question">
+                    <h4>${hasValidQuestion ? escapeHtml(quizData.question) : 'Your question will appear here'}</h4>
+                    ${hasValidOptions ? optionsHtml : '<p class="placeholder-text">Your answer options will appear here</p>'}
+                </div>
+                ${explanationHtml}
+            </div>
+        </div>
+    `;
+    
+    // Show the modal
+    previewModal.style.display = 'flex';
+    
+    // Close when clicking outside
+    previewModal.addEventListener('click', function(e) {
+        if (e.target === previewModal) {
+            closeQuizPreview();
+        }
+    });
+}
+
+/**
+ * Closes the quiz preview modal
+ */
+function closeQuizPreview() {
+    const previewModal = document.getElementById('quizPreviewModal');
+    if (previewModal) {
+        previewModal.style.display = 'none';
+    }
 }
 
 function renderMaterialBuilder() {
@@ -1119,6 +1527,79 @@ function renderMaterialBuilder() {
                 <textarea class="material-content-input" rows="2" 
                           onchange="updateMaterial(${index}, 'content', this.value)" 
                           placeholder="Image caption or description...">${escapeHtml(material.content)}</textarea>
+            `;
+        } else if (material.type === 'quiz_question') {
+            const quizData = material.quizData || {
+                questionType: 'multiple_choice',
+                question: '',
+                options: [
+                    { id: 'A', text: '', isCorrect: false },
+                    { id: 'B', text: '', isCorrect: false },
+                    { id: 'C', text: '', isCorrect: false },
+                    { id: 'D', text: '', isCorrect: false }
+                ],
+                explanation: ''
+            };
+            
+            materialInputs = `
+                <input type="text" class="material-title-input" value="${escapeHtml(material.title)}" 
+                       onchange="updateMaterial(${index}, 'title', this.value)" placeholder="Quiz title...">
+                
+                <!-- Interactive Quiz Builder -->
+                <div class="quiz-builder" id="quizBuilder${index}">
+                    <!-- Quiz Type Selector -->
+                    <div class="quiz-builder-header">
+                        <h5 style="margin: 0; color: #6b5b4a;">🎯 Interactive Quiz Builder</h5>
+                        <div class="quiz-type-selector">
+                            <label class="quiz-type-option ${quizData.questionType === 'multiple_choice' ? 'active' : ''}">
+                                <input type="radio" name="quizType${index}" value="multiple_choice" 
+                                       class="quiz-type-radio" ${quizData.questionType === 'multiple_choice' ? 'checked' : ''}
+                                       onchange="updateQuizType(${index}, this.value)">
+                                Multiple Choice
+                            </label>
+                            <label class="quiz-type-option ${quizData.questionType === 'true_false' ? 'active' : ''}">
+                                <input type="radio" name="quizType${index}" value="true_false" 
+                                       class="quiz-type-radio" ${quizData.questionType === 'true_false' ? 'checked' : ''}
+                                       onchange="updateQuizType(${index}, this.value)">
+                                True/False
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Question Input -->
+                    <textarea class="quiz-question-input" id="quizQuestion${index}" 
+                              placeholder="Enter your quiz question here..." 
+                              onchange="updateQuizQuestion(${index}, this.value)">${escapeHtml(quizData.question)}</textarea>
+                    
+                    <!-- Answer Options -->
+                    <div class="quiz-options-section">
+                        <div class="quiz-options-header">
+                            <h6 class="quiz-options-title">Answer Options:</h6>
+                            ${quizData.questionType === 'multiple_choice' ? `
+                                <button type="button" class="add-option-btn" onclick="addQuizOption(${index})">
+                                    <span>+</span> Add Option
+                                </button>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="quiz-options-list" id="quizOptionsList${index}">
+                            ${renderQuizOptions(quizData, index)}
+                        </div>
+                    </div>
+                    
+                    <!-- Explanation Section -->
+                    <div class="quiz-explanation-section">
+                        <label class="quiz-explanation-label">💡 Explanation (optional):</label>
+                        <textarea class="quiz-explanation-input" id="quizExplanation${index}" 
+                                  placeholder="Provide feedback or explanation for the answer..." 
+                                  onchange="updateQuizExplanation(${index}, this.value)">${escapeHtml(quizData.explanation)}</textarea>
+                    </div>
+                    
+                    <!-- Preview Button -->
+                    <button type="button" class="quiz-preview-btn" onclick="previewQuiz(${index})">
+                        <span>👁️</span> Preview Quiz
+                    </button>
+                </div>
             `;
         } else {
             materialInputs = `
@@ -1504,6 +1985,35 @@ function populateLessonFormForEdit(lesson) {
                 // Parse vocabulary content into table format
                 if (material.material_type === 'vocabulary') {
                     materialObj.vocabularyData = parseVocabularyContent(material.content);
+                }
+                
+                // Load quiz data from metadata
+                if (material.material_type === 'quiz_question') {
+                    console.log(`🎯 Loading quiz material: ${material.title}`);
+                    
+                    if (material.metadata && material.metadata.quizData) {
+                        // Use stored quiz data structure from metadata
+                        materialObj.quizData = material.metadata.quizData;
+                        console.log('  - Loaded quiz data from metadata');
+                    } else {
+                        // Create default quiz data if none exists
+                        materialObj.quizData = {
+                            questionType: 'multiple_choice',
+                            question: material.content || '',
+                            options: [
+                                { id: 'A', text: '', isCorrect: false },
+                                { id: 'B', text: '', isCorrect: false },
+                                { id: 'C', text: '', isCorrect: false },
+                                { id: 'D', text: '', isCorrect: false }
+                            ],
+                            explanation: ''
+                        };
+                        console.log('  - Created default quiz data structure');
+                    }
+                    
+                    // Ensure metadata is updated
+                    materialObj.metadata = materialObj.metadata || {};
+                    materialObj.metadata.quizData = materialObj.quizData;
                 }
                 
                 return materialObj;
@@ -1943,25 +2453,84 @@ function renderPreviewVocabularyContent(content) {
 }
 
 function renderPreviewQuizContent(content, metadata) {
-    const questionText = content && content.trim() ? 
-        escapeHtml(content) : 
-        'Interactive quiz question will be added here';
+    // Check if we have quiz data in the metadata
+    let quizData;
+    if (metadata && metadata.quizData) {
+        quizData = metadata.quizData;
+        console.log('🎯 Rendering quiz from metadata:', quizData);
+    } else {
+        // Fallback to simple content text
+        const questionText = content && content.trim() ? 
+            escapeHtml(content) : 
+            'Interactive quiz question will be added here';
+            
+        console.log('🎯 Rendering quiz from content text (legacy):', content);
         
+        return `
+            <div class="quiz-question">
+                <div class="question-content">
+                    <p>❓ ${questionText}</p>
+                </div>
+                <div class="quiz-placeholder">
+                    <div class="quiz-options-preview">
+                        <div class="option-placeholder">○ Answer option A</div>
+                        <div class="option-placeholder">○ Answer option B</div>
+                        <div class="option-placeholder">○ Answer option C</div>
+                    </div>
+                    <div class="quiz-note">
+                        <em>💡 Interactive quiz features will be fully implemented in the next update</em>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Generate options markup
+    let optionsHtml = '';
+    
+    if (quizData.questionType === 'true_false') {
+        optionsHtml = `
+            <div class="quiz-options-preview">
+                <div class="option-item ${quizData.options.find(o => o.id === 'T')?.isCorrect ? 'correct-option' : ''}">
+                    <span class="option-marker">${quizData.options.find(o => o.id === 'T')?.isCorrect ? '✔' : '○'}</span>
+                    <span class="option-text">True</span>
+                </div>
+                <div class="option-item ${quizData.options.find(o => o.id === 'F')?.isCorrect ? 'correct-option' : ''}">
+                    <span class="option-marker">${quizData.options.find(o => o.id === 'F')?.isCorrect ? '✔' : '○'}</span>
+                    <span class="option-text">False</span>
+                </div>
+            </div>
+        `;
+    } else {
+        // Handle multiple choice questions
+        optionsHtml = `
+            <div class="quiz-options-preview">
+                ${quizData.options.map(option => {
+                    return `
+                        <div class="option-item ${option.isCorrect ? 'correct-option' : ''}">
+                            <span class="option-marker">${option.isCorrect ? '✔' : '○'}</span>
+                            <span class="option-text">${escapeHtml(option.text || `Option ${option.id}`)}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+    
+    // Add explanation if available
+    const explanationHtml = quizData.explanation ? `
+        <div class="quiz-explanation">
+            <p><strong>Explanation:</strong> ${escapeHtml(quizData.explanation)}</p>
+        </div>
+    ` : '';
+    
     return `
         <div class="quiz-question">
             <div class="question-content">
-                <p>❓ ${questionText}</p>
+                <p>❓ ${escapeHtml(quizData.question)}</p>
             </div>
-            <div class="quiz-placeholder">
-                <div class="quiz-options-preview">
-                    <div class="option-placeholder">○ Answer option A</div>
-                    <div class="option-placeholder">○ Answer option B</div>
-                    <div class="option-placeholder">○ Answer option C</div>
-                </div>
-                <div class="quiz-note">
-                    <em>💡 Interactive quiz features will be fully implemented in the next update</em>
-                </div>
-            </div>
+            ${optionsHtml}
+            ${explanationHtml}
         </div>
     `;
 }
