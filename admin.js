@@ -1134,14 +1134,14 @@ function updateQuizType(index, type) {
         }
     });
     
-    // Reset options for true/false questions
+    // Reset options based on question type
     if (type === 'true_false') {
         material.quizData.options = [
             { id: 'T', text: 'True', isCorrect: false },
             { id: 'F', text: 'False', isCorrect: false }
         ];
-    } else if (!material.quizData.options || material.quizData.options.length < 2) {
-        // Reset to default multiple choice options if needed
+    } else {
+        // Always reset to default multiple choice options when switching to multiple choice
         material.quizData.options = [
             { id: 'A', text: '', isCorrect: false },
             { id: 'B', text: '', isCorrect: false },

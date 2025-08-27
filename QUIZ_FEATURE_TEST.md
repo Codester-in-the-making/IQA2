@@ -62,7 +62,11 @@
    - Add/remove/edit options
    - Change correct answer
    - Edit explanation
-4. **Save changes** and verify persistence
+4. **Test quiz type switching bug fix**:
+   - Create a Multiple Choice quiz with default ABCD options
+   - Switch to True/False and verify options change to T/F
+   - Switch back to Multiple Choice and verify options change back to ABCD
+5. **Save changes** and verify persistence
 
 ### Test 4: Option Management
 1. Create a new Multiple Choice quiz
