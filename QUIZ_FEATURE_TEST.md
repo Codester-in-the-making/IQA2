@@ -95,6 +95,11 @@
    - Other options become non-clickable
 3. **Select an incorrect answer** in another quiz
 4. Verify the correct answer is revealed after selection
+5. **Test both Multiple Choice and True/False quizzes**:
+   - Verify that all options are clickable
+   - Verify that correct answers are properly identified
+   - Verify that incorrect answers show the correct answer
+   - Verify that feedback and explanations appear correctly
 
 ### Test 7: Browser Compatibility
 1. Test the entire quiz workflow in:

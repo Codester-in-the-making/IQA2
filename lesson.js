@@ -15,6 +15,88 @@ let currentMaterialIndex = 0;
 let userNotes = '';
 let lessonProgress = 0;
 
+// Global quiz data store
+window.quizDataStore = window.quizDataStore || {};
+
+// Global function to handle quiz answers
+function handleQuizAnswer(optionElement, selectedOptionId, quizKey) {
+    // Get quiz options from global store
+    const quizOptions = window.quizDataStore[quizKey];
+    
+    if (!quizOptions) {
+        console.error('Quiz data not found for key:', quizKey);
+        return;
+    }
+    
+    // Find if the selected option is correct
+    const selectedOption = quizOptions.find(option => option.id === selectedOptionId);
+    const isCorrect = selectedOption ? selectedOption.isCorrect : false;
+    
+    // Get parent quiz question container
+    const quizContainer = optionElement.closest('.quiz-question');
+    if (!quizContainer) return;
+    
+    // Find all options and disable further selection
+    const allOptions = quizContainer.querySelectorAll('.quiz-option');
+    allOptions.forEach(opt => {
+        opt.classList.add('disabled');
+        opt.onclick = null;
+    });
+    
+    // Mark selected option
+    optionElement.classList.add('selected');
+    
+    // Update option indicator based on correctness
+    const indicator = optionElement.querySelector('.option-indicator');
+    if (indicator) {
+        indicator.textContent = isCorrect ? '✔' : '✖';
+        indicator.style.color = isCorrect ? '#10b981' : '#ef4444';
+    }
+    
+    // Show correct answers if wrong answer selected
+    if (!isCorrect) {
+        allOptions.forEach((opt, index) => {
+            // Get the option ID from the onclick attribute
+            const onclickAttr = opt.getAttribute('onclick');
+            let optionId;
+            
+            if (onclickAttr) {
+                // Extract option ID from onclick attribute
+                const match = onclickAttr.match(/handleQuizAnswer\(this, '([^']*)'/);
+                if (match && match[1]) {
+                    optionId = match[1];
+                }
+            }
+            
+            const isOptCorrect = quizOptions.find(option => option.id === optionId)?.isCorrect;
+            const optIndicator = opt.querySelector('.option-indicator');
+            if (isOptCorrect && optIndicator) {
+                optIndicator.textContent = '✔';
+                optIndicator.style.color = '#10b981';
+                opt.classList.add('correct-answer');
+            }
+        });
+    }
+    
+    // Show feedback
+    const feedback = quizContainer.querySelector('.quiz-feedback');
+    if (feedback) {
+        feedback.style.display = 'block';
+        feedback.innerHTML = isCorrect ?
+            '<div class="correct-feedback">✅ Correct! Well done.</div>' :
+            '<div class="incorrect-feedback">❌ Incorrect. Review the correct answer.</div>';
+    }
+    
+    // Show explanation if available
+    const explanation = quizContainer.querySelector('.quiz-explanation');
+    if (explanation) {
+        explanation.style.display = 'block';
+    }
+    
+    // Update progress for the lesson
+    window.updateProgressBasedOnInteraction && window.updateProgressBasedOnInteraction();
+}
+
 // DOM Elements
 let lessonTitle, courseTitle, lessonType, lessonDuration, lessonNumber, lessonDescription, lessonDescriptionText;
 let lessonMaterials, lessonLoading, lessonNavFooter, progressDots;
@@ -193,7 +275,7 @@ function displayLessonMaterials() {
                         <ul>
                             <li>🎯 Key Quranic Arabic concepts</li>
                             <li>📚 Essential vocabulary and grammar</li>
-                            <li>🔤 Reading and comprehension skills</li>
+                            <li>EMPLARY Reading and comprehension skills</li>
                             <li>💡 Practical application exercises</li>
                         </ul>
                     </div>
@@ -458,14 +540,19 @@ function renderQuizContent(content, metadata) {
     // Generate quiz options markup based on question type
     let optionsHtml;
     
+    // Store quiz data in a global object with a unique key
+    const quizKey = `quiz_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    window.quizDataStore = window.quizDataStore || {};
+    window.quizDataStore[quizKey] = quizData.options;
+    
     if (quizData.questionType === 'true_false') {
         optionsHtml = `
             <div class="quiz-options">
-                <div class="quiz-option" onclick="handleQuizAnswer(this, ${quizData.options.find(o => o.id === 'T')?.isCorrect})">
+                <div class="quiz-option" onclick="handleQuizAnswer(this, 'T', '${quizKey}')">
                     <span class="option-indicator">○</span>
                     <span class="option-text">True</span>
                 </div>
-                <div class="quiz-option" onclick="handleQuizAnswer(this, ${quizData.options.find(o => o.id === 'F')?.isCorrect})">
+                <div class="quiz-option" onclick="handleQuizAnswer(this, 'F', '${quizKey}')">
                     <span class="option-indicator">○</span>
                     <span class="option-text">False</span>
                 </div>
@@ -475,8 +562,8 @@ function renderQuizContent(content, metadata) {
         // Multiple choice options
         optionsHtml = `
             <div class="quiz-options">
-                ${quizData.options.filter(option => option.text.trim()).map(option => `
-                    <div class="quiz-option" onclick="handleQuizAnswer(this, ${option.isCorrect})">
+                ${quizData.options.filter(option => option.text.trim()).map((option, index) => `
+                    <div class="quiz-option" onclick="handleQuizAnswer(this, '${option.id}', '${quizKey}')">
                         <span class="option-indicator">○</span>
                         <span class="option-text">${escapeHtml(option.text)}</span>
                     </div>
@@ -494,7 +581,7 @@ function renderQuizContent(content, metadata) {
     ` : '';
     
     return `
-        <div class="quiz-question" data-quiz-id="quiz_${Date.now()}">
+        <div class="quiz-question" data-quiz-id="quiz_${Date.now()}" data-quiz-key="${quizKey}">
             <div class="question-content">
                 <p>❓ ${escapeHtml(quizData.question)}</p>
             </div>
@@ -502,61 +589,6 @@ function renderQuizContent(content, metadata) {
             ${explanationHtml}
             <div class="quiz-feedback" style="display: none;"></div>
         </div>
-        <script>
-        function handleQuizAnswer(optionElement, isCorrect) {
-            // Get parent quiz question container
-            const quizContainer = optionElement.closest('.quiz-question');
-            if (!quizContainer) return;
-            
-            // Find all options and disable further selection
-            const allOptions = quizContainer.querySelectorAll('.quiz-option');
-            allOptions.forEach(opt => {
-                opt.classList.add('disabled');
-                opt.onclick = null;
-            });
-            
-            // Mark selected option
-            optionElement.classList.add('selected');
-            
-            // Update option indicator based on correctness
-            const indicator = optionElement.querySelector('.option-indicator');
-            if (indicator) {
-                indicator.textContent = isCorrect ? '✔' : '✖';
-                indicator.style.color = isCorrect ? '#10b981' : '#ef4444';
-            }
-            
-            // Show correct answers if wrong answer selected
-            if (!isCorrect) {
-                allOptions.forEach(opt => {
-                    const isOptCorrect = opt.getAttribute('onclick')?.includes('true');
-                    const optIndicator = opt.querySelector('.option-indicator');
-                    if (isOptCorrect && optIndicator) {
-                        optIndicator.textContent = '✔';
-                        optIndicator.style.color = '#10b981';
-                        opt.classList.add('correct-answer');
-                    }
-                });
-            }
-            
-            // Show feedback
-            const feedback = quizContainer.querySelector('.quiz-feedback');
-            if (feedback) {
-                feedback.style.display = 'block';
-                feedback.innerHTML = isCorrect ?
-                    '<div class="correct-feedback">✅ Correct! Well done.</div>' :
-                    '<div class="incorrect-feedback">❌ Incorrect. Review the correct answer.</div>';
-            }
-            
-            // Show explanation if available
-            const explanation = quizContainer.querySelector('.quiz-explanation');
-            if (explanation) {
-                explanation.style.display = 'block';
-            }
-            
-            // Update progress for the lesson
-            window.updateProgressBasedOnInteraction && window.updateProgressBasedOnInteraction();
-        }
-        </script>
     `;
 }
 
