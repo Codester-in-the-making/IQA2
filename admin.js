@@ -1,10 +1,10 @@
 // Admin Dashboard JavaScript with Supabase Integration
 
-// Initialize Supabase client
-const SUPABASE_URL = 'https://dzrfanpquocakcoxvbta.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6cmZhbnBxdW9jYWtjb3h2YnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NDY0MTIsImV4cCI6MjA3MTUyMjQxMn0.CzcEUtpJ_g2oEZQ2quTRbiiwzacdHNPYk9dtWj_7ozE';
+// Import utilities from shared utils
+const { getSupabaseClient, escapeHtml, capitalizeFirst, formatDate, showSuccess, showError, hideMessages, showLoading } = window.IQAUtils;
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Initialize Supabase client using shared utility
+const supabase = getSupabaseClient();
 
 // DOM Elements
 let courseForm, coursesList, loadingMessage, successMessage, errorMessage;
@@ -59,7 +59,7 @@ function setupEventListeners() {
 async function handleCourseSubmission(e) {
     e.preventDefault();
     
-    showLoading(true);
+    showLoading(loadingMessage, true);
     hideMessages();
 
     try {
@@ -89,9 +89,9 @@ async function handleCourseSubmission(e) {
 
     } catch (error) {
         console.error('Error handling course submission:', error);
-        showErrorMessage('Failed to save course. Please try again.');
+        showError(errorMessage, 'Failed to save course. Please try again.');
     } finally {
-        showLoading(false);
+        showLoading(loadingMessage, false);
     }
 }
 
@@ -107,7 +107,7 @@ async function createNewCourse(courseData) {
     }
 
     // Success
-    showSuccessMessage('Course created successfully!');
+    showSuccess(successMessage, 'Course created successfully!');
     resetForm();
     loadCourses(); // Refresh the courses list
 }
@@ -124,7 +124,7 @@ async function updateExistingCourse(courseId, courseData) {
     }
 
     // Success
-    showSuccessMessage('Course updated successfully!');
+    showSuccess(successMessage, 'Course updated successfully!');
     currentEditingCourse = null;
     resetForm();
     updateCourseFormForEditMode(false);
@@ -133,27 +133,27 @@ async function updateExistingCourse(courseId, courseData) {
 
 function validateCourseData(data) {
     if (!data.title || data.title.length < 3) {
-        showErrorMessage('Course title must be at least 3 characters long.');
+        showError(errorMessage, 'Course title must be at least 3 characters long.');
         return false;
     }
 
     if (!data.description || data.description.length < 10) {
-        showErrorMessage('Course description must be at least 10 characters long.');
+        showError(errorMessage, 'Course description must be at least 10 characters long.');
         return false;
     }
 
     if (!data.level) {
-        showErrorMessage('Please select a course level.');
+        showError(errorMessage, 'Please select a course level.');
         return false;
     }
 
     if (!data.lesson_count || data.lesson_count < 1) {
-        showErrorMessage('Number of lessons must be at least 1.');
+        showError(errorMessage,'Number of lessons must be at least 1.');
         return false;
     }
 
     if (!data.duration_weeks) {
-        showErrorMessage('Please specify the course duration.');
+        showError(errorMessage,'Please specify the course duration.');
         return false;
     }
 
@@ -161,7 +161,7 @@ function validateCourseData(data) {
 }
 
 async function loadCourses() {
-    showLoading(true);
+    showLoading(loadingMessage, true);
 
     try {
         const { data: courses, error } = await supabase
@@ -177,9 +177,9 @@ async function loadCourses() {
 
     } catch (error) {
         console.error('Error loading courses:', error);
-        showErrorMessage('Failed to load courses.');
+        showError(errorMessage,'Failed to load courses.');
     } finally {
-        showLoading(false);
+        showLoading(loadingMessage, false);
     }
 }
 
@@ -238,7 +238,7 @@ function displayCourses(courses) {
 }
 
 async function togglePublishStatus(courseId, isPublished) {
-    showLoading(true);
+    showLoading(loadingMessage, true);
 
     try {
         const { error } = await supabase
@@ -250,14 +250,14 @@ async function togglePublishStatus(courseId, isPublished) {
             throw error;
         }
 
-        showSuccessMessage(`Course ${isPublished ? 'published' : 'unpublished'} successfully!`);
+        showSuccess(successMessage, `Course ${isPublished ? 'published' : 'unpublished'} successfully!`);
         loadCourses(); // Refresh the list
 
     } catch (error) {
         console.error('Error updating course status:', error);
-        showErrorMessage('Failed to update course status.');
+        showError(errorMessage,'Failed to update course status.');
     } finally {
-        showLoading(false);
+        showLoading(loadingMessage, false);
     }
 }
 
@@ -266,7 +266,7 @@ async function deleteCourse(courseId, courseTitle) {
     
     if (!confirmed) return;
 
-    showLoading(true);
+    showLoading(loadingMessage, true);
 
     try {
         const { error } = await supabase
@@ -278,19 +278,19 @@ async function deleteCourse(courseId, courseTitle) {
             throw error;
         }
 
-        showSuccessMessage('Course deleted successfully!');
+        showSuccess(successMessage, 'Course deleted successfully!');
         loadCourses(); // Refresh the list
 
     } catch (error) {
         console.error('Error deleting course:', error);
-        showErrorMessage('Failed to delete course.');
+        showError(errorMessage,'Failed to delete course.');
     } finally {
-        showLoading(false);
+        showLoading(loadingMessage, false);
     }
 }
 
 async function editCourse(courseId) {
-    showLoading(true);
+    showLoading(loadingMessage, true);
     
     try {
         // Load course data
@@ -312,16 +312,16 @@ async function editCourse(courseId) {
         currentEditingCourse = course;
         populateCourseFormForEdit(course);
         
-        showSuccessMessage('Course loaded for editing. Make your changes and click "Update Course".');
+        showSuccess(successMessage, 'Course loaded for editing. Make your changes and click "Update Course".');
         
         // Scroll to form
         courseForm.scrollIntoView({ behavior: 'smooth' });
         
     } catch (error) {
         console.error('Error loading course for edit:', error);
-        showErrorMessage('Failed to load course for editing.');
+        showError(errorMessage,'Failed to load course for editing.');
     } finally {
-        showLoading(false);
+        showLoading(loadingMessage, false);
     }
 }
 
@@ -363,7 +363,7 @@ function cancelCourseEdit() {
         currentEditingCourse = null;
         resetForm();
         updateCourseFormForEditMode(false);
-        showSuccessMessage('Edit cancelled.');
+        showSuccess(successMessage, 'Edit cancelled.');
     }
 }
 
@@ -449,7 +449,7 @@ function addVocabularyRow(materialIndex) {
         // Re-render the material builder
         renderMaterialBuilder();
         
-        showSuccessMessage('Vocabulary row added successfully!');
+        showSuccess(successMessage, 'Vocabulary row added successfully!');
     }
 }
 
@@ -467,7 +467,7 @@ function removeVocabularyRow(materialIndex, rowIndex) {
             // Re-render the material builder
             renderMaterialBuilder();
             
-            showSuccessMessage('Vocabulary row removed successfully!');
+            showSuccess(successMessage,'Vocabulary row removed successfully!');
         }
     }
 }
@@ -547,56 +547,10 @@ function resetForm() {
     hideMessages();
 }
 
-// Utility functions
-function showLoading(show) {
-    loadingMessage.style.display = show ? 'flex' : 'none';
-}
 
-function showSuccessMessage(message) {
-    successMessage.querySelector('.message-text').textContent = message;
-    successMessage.style.display = 'flex';
-    setTimeout(() => {
-        successMessage.style.display = 'none';
-    }, 5000);
-}
-
-function showErrorMessage(message) {
-    errorMessage.querySelector('.message-text').textContent = message;
-    errorMessage.style.display = 'flex';
-    setTimeout(() => {
-        errorMessage.style.display = 'none';
-    }, 7000);
-}
-
-function hideMessages() {
-    successMessage.style.display = 'none';
-    errorMessage.style.display = 'none';
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function capitalizeFirst(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
 
 // Console message for debugging
 console.log('🔧 Admin Dashboard loaded successfully');
-console.log('📊 Supabase connected:', SUPABASE_URL);
 
 // ===========================================
 // LESSON MANAGEMENT FUNCTIONALITY
@@ -684,7 +638,7 @@ function displaySelectedCourseInfo() {
 }
 
 async function loadCourseLessons(courseId) {
-    showLoading(true);
+    showLoading(loadingMessage, true);
     
     try {
         const { data: lessons, error } = await supabase
@@ -708,9 +662,9 @@ async function loadCourseLessons(courseId) {
         
     } catch (error) {
         console.error('Error loading lessons:', error);
-        showErrorMessage('Failed to load lessons.');
+        showError(errorMessage,'Failed to load lessons.');
     } finally {
-        showLoading(false);
+        showLoading(loadingMessage, false);
     }
 }
 
@@ -767,11 +721,11 @@ async function handleLessonSubmission(e) {
     e.preventDefault();
     
     if (!currentSelectedCourse) {
-        showErrorMessage('No course selected.');
+        showError(errorMessage,'No course selected.');
         return;
     }
     
-    showLoading(true);
+    showLoading(loadingMessage, true);
     hideMessages();
     
     try {
@@ -803,9 +757,9 @@ async function handleLessonSubmission(e) {
         
     } catch (error) {
         console.error('Error handling lesson submission:', error);
-        showErrorMessage('Failed to save lesson. Please try again.');
+        showError(errorMessage,'Failed to save lesson. Please try again.');
     } finally {
-        showLoading(false);
+        showLoading(loadingMessage, false);
     }
 }
 
@@ -826,7 +780,7 @@ async function createNewLesson(lessonData) {
     }
     
     // Success
-    showSuccessMessage('Lesson created successfully!');
+    showSuccess(successMessage,'Lesson created successfully!');
     resetLessonFormData();
     await loadCourseLessons(currentSelectedCourse.id);
 }
@@ -846,7 +800,7 @@ async function updateExistingLesson(lessonId, lessonData) {
     await updateLessonMaterials(lessonId);
     
     // Success
-    showSuccessMessage('Lesson updated successfully!');
+    showSuccess(successMessage,'Lesson updated successfully!');
     currentEditingLesson = null;
     resetLessonFormData();
     updateFormForEditMode(false);
@@ -932,23 +886,23 @@ async function updateLessonMaterials(lessonId) {
 
 function validateLessonData(data) {
     if (!data.title || data.title.length < 3) {
-        showErrorMessage('Lesson title must be at least 3 characters long.');
+        showError(errorMessage,'Lesson title must be at least 3 characters long.');
         return false;
     }
     
     if (!data.lesson_order || data.lesson_order < 1) {
-        showErrorMessage('Lesson order must be a positive number.');
+        showError(errorMessage,'Lesson order must be a positive number.');
         return false;
     }
     
     if (!data.duration_minutes || data.duration_minutes < 5) {
-        showErrorMessage('Lesson duration must be at least 5 minutes.');
+        showError(errorMessage,'Lesson duration must be at least 5 minutes.');
         return false;
     }
     
     // Check if at least one material is added
     if (lessonMaterials.length === 0) {
-        showErrorMessage('Please add at least one material to the lesson.');
+        showError(errorMessage,'Please add at least one material to the lesson.');
         return false;
     }
     
@@ -1299,7 +1253,7 @@ function removeQuizOption(materialIndex, optionIndex) {
     
     // Don't allow removing if we only have 2 options left
     if (material.quizData.options.length <= 2) {
-        showErrorMessage('Quiz questions must have at least 2 options.');
+        showError(errorMessage,'Quiz questions must have at least 2 options.');
         return;
     }
     
@@ -1667,7 +1621,7 @@ function clearImageUpload(index) {
         }
         
         renderMaterialBuilder();
-        showSuccessMessage('Image cleared successfully!');
+        showSuccess(successMessage,'Image cleared successfully!');
     }
 }
 
@@ -1763,19 +1717,19 @@ async function handleImageUpload(index, input) {
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
-        showErrorMessage('Please select a valid image file.');
+        showError(errorMessage,'Please select a valid image file.');
         input.value = '';
         return;
     }
     
     // Validate file size (max 10MB for storage)
     if (file.size > 10 * 1024 * 1024) {
-        showErrorMessage('Image file size must be less than 10MB.');
+        showError(errorMessage,'Image file size must be less than 10MB.');
         input.value = '';
         return;
     }
     
-    showSuccessMessage('Uploading image to storage...');
+    showSuccess(successMessage,'Uploading image to storage...');
     
     try {
         // Generate unique filename
@@ -1825,12 +1779,12 @@ async function handleImageUpload(index, input) {
             // Initialize image sizing controls
             initializeImageSizing(index);
             
-            showSuccessMessage(`Image "${file.name}" uploaded successfully!`);
+            showSuccess(successMessage,`Image "${file.name}" uploaded successfully!`);
         }
         
     } catch (error) {
         console.error('❌ Error uploading image:', error);
-        showErrorMessage(`Failed to upload image: ${error.message}`);
+        showError(errorMessage,`Failed to upload image: ${error.message}`);
         input.value = '';
     }
 }
@@ -1845,7 +1799,7 @@ function resetLessonFormData() {
 }
 
 async function toggleLessonPublishStatus(lessonId, isPublished) {
-    showLoading(true);
+    showLoading(loadingMessage, true);
     
     try {
         const { error } = await supabase
@@ -1857,14 +1811,14 @@ async function toggleLessonPublishStatus(lessonId, isPublished) {
             throw error;
         }
         
-        showSuccessMessage(`Lesson ${isPublished ? 'published' : 'unpublished'} successfully!`);
+        showSuccess(successMessage,`Lesson ${isPublished ? 'published' : 'unpublished'} successfully!`);
         await loadCourseLessons(currentSelectedCourse.id);
         
     } catch (error) {
         console.error('Error updating lesson status:', error);
-        showErrorMessage('Failed to update lesson status.');
+        showError(errorMessage,'Failed to update lesson status.');
     } finally {
-        showLoading(false);
+        showLoading(loadingMessage, false);
     }
 }
 
@@ -1873,7 +1827,7 @@ async function deleteLesson(lessonId, lessonTitle) {
     
     if (!confirmed) return;
     
-    showLoading(true);
+    showLoading(loadingMessage, true);
     
     try {
         const { error } = await supabase
@@ -1885,24 +1839,24 @@ async function deleteLesson(lessonId, lessonTitle) {
             throw error;
         }
         
-        showSuccessMessage('Lesson deleted successfully!');
+        showSuccess(successMessage,'Lesson deleted successfully!');
         await loadCourseLessons(currentSelectedCourse.id);
         
     } catch (error) {
         console.error('Error deleting lesson:', error);
-        showErrorMessage('Failed to delete lesson.');
+        showError(errorMessage,'Failed to delete lesson.');
     } finally {
-        showLoading(false);
+        showLoading(loadingMessage, false);
     }
 }
 
 async function editLesson(lessonId) {
     if (!currentSelectedCourse) {
-        showErrorMessage('No course selected.');
+        showError(errorMessage,'No course selected.');
         return;
     }
     
-    showLoading(true);
+    showLoading(loadingMessage, true);
     
     try {
         // Load lesson data with materials
@@ -1927,16 +1881,16 @@ async function editLesson(lessonId) {
         currentEditingLesson = lesson;
         populateLessonFormForEdit(lesson);
         
-        showSuccessMessage('Lesson loaded for editing. Make your changes and click "Update Lesson".');
+        showSuccess(successMessage,'Lesson loaded for editing. Make your changes and click "Update Lesson".');
         
         // Scroll to form
         lessonForm.scrollIntoView({ behavior: 'smooth' });
         
     } catch (error) {
         console.error('Error loading lesson for edit:', error);
-        showErrorMessage('Failed to load lesson for editing.');
+        showError(errorMessage,'Failed to load lesson for editing.');
     } finally {
-        showLoading(false);
+        showLoading(loadingMessage, false);
     }
 }
 
@@ -2059,7 +2013,7 @@ function cancelLessonEdit() {
         currentEditingLesson = null;
         resetLessonFormData();
         updateFormForEditMode(false);
-        showSuccessMessage('Edit cancelled.');
+        showSuccess(successMessage,'Edit cancelled.');
     }
 }
 
@@ -2102,7 +2056,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function previewLesson(lessonId) {
     if (!lessonId) {
-        showErrorMessage('No lesson ID provided for preview.');
+        showError(errorMessage,'No lesson ID provided for preview.');
         return;
     }
     
@@ -2141,7 +2095,7 @@ async function previewLesson(lessonId) {
         
     } catch (error) {
         console.error('Error loading lesson preview:', error);
-        showErrorMessage(`Failed to load lesson preview: ${error.message}`);
+        showError(errorMessage,`Failed to load lesson preview: ${error.message}`);
         closeLessonPreview();
     } finally {
         showPreviewLoading(false);
@@ -2551,7 +2505,7 @@ document.addEventListener('click', function(e) {
 
 // Console message for debugging
 console.log('🔧 Admin Dashboard loaded successfully');
-console.log('🔗 Supabase connected:', SUPABASE_URL);
+
 console.log('👁️ Lesson Preview functionality enabled');
 
 // ========================================

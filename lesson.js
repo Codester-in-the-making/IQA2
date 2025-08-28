@@ -1,10 +1,17 @@
 // Lesson Page JavaScript with Supabase Integration
 
-// Initialize Supabase client
-const SUPABASE_URL = 'https://dzrfanpquocakcoxvbta.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6cmZhbnBxdW9jYWtjb3h2YnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NDY0MTIsImV4cCI6MjA3MTUyMjQxMn0.CzcEUtpJ_g2oEZQ2quTRbiiwzacdHNPYk9dtWj_7ozE';
+// Import utilities from shared utils
+const { getSupabaseClient, escapeHtml, capitalizeFirst, showLoading, showError, showSuccess } = window.IQAUtils;
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Initialize Supabase client using shared utility
+const supabase = getSupabaseClient();
+
+// Custom showLoading for lesson page (different behavior than shared utility)
+function showLessonLoading(show) {
+    lessonLoading.style.display = show ? 'flex' : 'none';
+    lessonMaterials.style.display = show ? 'none' : 'block';
+    lessonNavFooter.style.display = show ? 'none' : 'flex';
+}
 
 // Global variables
 let currentLesson = null;
@@ -119,7 +126,7 @@ function initializePage() {
     const lessonTitleParam = urlParams.get('title');
 
     if (!lessonId) {
-        showError('No lesson ID provided. Redirecting to courses page...');
+        showError(errorMessage, 'No lesson ID provided. Redirecting to courses page...');
         setTimeout(() => {
             window.location.href = 'courses.html';
         }, 2000);
@@ -222,7 +229,7 @@ async function loadLessonData(lessonId, courseId) {
 
     } catch (error) {
         console.error('Error loading lesson:', error);
-        showError(`Failed to load lesson: ${error.message}. Please try again.`);
+        showError(errorMessage, `Failed to load lesson: ${error.message}. Please try again.`);
         
         // Provide fallback navigation
         setTimeout(() => {
@@ -698,7 +705,7 @@ function initializeProgressTracking() {
 function markLessonComplete() {
     lessonProgress = 100;
     updateProgress();
-    showSuccess('Lesson completed successfully!');
+    showSuccess(successMessage, 'Lesson completed successfully!');
     
     // Enable next lesson button if available
     if (!nextLessonBtn.disabled) {
@@ -733,7 +740,7 @@ function saveNotes() {
     userNotes = notesTextarea.value;
     // In a real app, this would save to database
     console.log('Notes saved:', userNotes);
-    showSuccess('Notes saved successfully!');
+    showSuccess(successMessage, 'Notes saved successfully!');
 }
 
 function toggleBookmark() {
@@ -758,39 +765,5 @@ function handleKeyboardNavigation(e) {
     }
 }
 
-// Utility functions
-function showLoading(show) {
-    lessonLoading.style.display = show ? 'flex' : 'none';
-    lessonMaterials.style.display = show ? 'none' : 'block';
-    lessonNavFooter.style.display = show ? 'none' : 'flex';
-}
-
-function showError(message) {
-    errorMessage.querySelector('.message-text').textContent = message;
-    errorMessage.style.display = 'flex';
-    setTimeout(() => {
-        errorMessage.style.display = 'none';
-    }, 5000);
-}
-
-function showSuccess(message) {
-    successMessage.querySelector('.message-text').textContent = message;
-    successMessage.style.display = 'flex';
-    setTimeout(() => {
-        successMessage.style.display = 'none';
-    }, 3000);
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function capitalizeFirst(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
 // Console message for debugging
 console.log('📖 Lesson Page loaded successfully');
-console.log('🔗 Supabase connected:', SUPABASE_URL);

@@ -1,10 +1,10 @@
 // Courses Page JavaScript with Supabase Integration
 
-// Initialize Supabase client
-const SUPABASE_URL = 'https://dzrfanpquocakcoxvbta.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6cmZhbnBxdW9jYWtjb3h2YnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NDY0MTIsImV4cCI6MjA3MTUyMjQxMn0.CzcEUtpJ_g2oEZQ2quTRbiiwzacdHNPYk9dtWj_7ozE';
+// Import utilities from shared utils
+const { getSupabaseClient, escapeHtml } = window.IQAUtils;
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Initialize Supabase client using shared utility
+const supabase = getSupabaseClient();
 
 // Course icon mapping
 const courseIcons = {
@@ -271,49 +271,6 @@ function filterCourses(level) {
     });
 }
 
-// Utility functions
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function updateCourseProgress(courseId, progress) {
-    const courseCard = document.querySelector(`[data-course-id="${courseId}"]`);
-    if (courseCard) {
-        const progressBar = courseCard.querySelector('.progress-fill');
-        const progressText = courseCard.querySelector('.progress-text');
-        
-        if (progressBar && progressText) {
-            progressBar.style.width = `${progress}%`;
-            progressText.textContent = `${progress}% Complete`;
-        }
-    }
-}
-
-function addCompletionBadge(courseId) {
-    const courseCard = document.querySelector(`[data-course-id="${courseId}"]`);
-    if (courseCard && !courseCard.querySelector('.completion-badge')) {
-        const badge = document.createElement('div');
-        badge.className = 'completion-badge';
-        badge.innerHTML = '✓ Completed';
-        badge.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #22c55e;
-            color: white;
-            padding: 0.3rem 0.8rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        `;
-        courseCard.style.position = 'relative';
-        courseCard.appendChild(badge);
-    }
-}
-
 // Console welcome message
 console.log('🎓 Welcome to IQA Courses Page!');
 console.log('📚 Courses loaded from Supabase database');
-console.log('🔗 Supabase connected:', SUPABASE_URL);
